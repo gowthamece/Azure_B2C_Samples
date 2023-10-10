@@ -1,0 +1,326 @@
+<TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0"
+  TenantId="gowthamcbe.onmicrosoft.com"
+  PolicyId="B2C_1A_Demo_SignUp_SignIn_SplitEmailVerificationAndSignUp"
+  PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_Demo_SignUp_SignIn_SplitEmailVerificationAndSignUp">
+
+	<BasePolicy>
+		<TenantId>gowthamcbe.onmicrosoft.com</TenantId>
+		<PolicyId>B2C_1A_Starter_TrustFrameworkExtensions</PolicyId>
+	</BasePolicy>
+
+	<BuildingBlocks>
+		<ClaimsSchema>
+			<!-- Read only email address to present to the user-->
+			<ClaimType Id="extension_customDisplayName">
+				<DisplayName>Custom Display Name</DisplayName>
+				<DataType>string</DataType>		
+				<UserInputType>TextBox</UserInputType>
+			</ClaimType>
+			<ClaimType Id="extension_customGivenName">
+				<DisplayName>Custom Given Name</DisplayName>
+				<DataType>string</DataType>
+				<UserInputType>TextBox</UserInputType>
+			</ClaimType>
+			<ClaimType Id="extension_customSurName">
+				<DisplayName>Custom Sur Name</DisplayName>
+				<DataType>string</DataType>
+				<UserInputType>TextBox</UserInputType>
+			</ClaimType>
+
+			<ClaimType Id="readonlyEmail">
+				<DisplayName>E-mail Address</DisplayName>
+				<DataType>string</DataType>
+				<UserInputType>Readonly</UserInputType>
+			</ClaimType>
+			<ClaimType Id="readonlyGivenName">
+				<DisplayName>Given Name</DisplayName>
+				<DataType>string</DataType>
+				<UserInputType>Readonly</UserInputType>
+			</ClaimType>
+			<ClaimType Id="migrationRequired">
+				<DisplayName>extension_migrationRequired</DisplayName>
+				<DataType>boolean</DataType>
+				<AdminHelpText>extension_migrationRequired</AdminHelpText>
+				<UserHelpText>extension_migrationRequired</UserHelpText>
+			</ClaimType>
+			<ClaimType Id="tokenSuccess">
+				<DisplayName>extension_tokenSuccess</DisplayName>
+				<DataType>boolean</DataType>
+				<AdminHelpText>extension_tokenSuccess</AdminHelpText>
+				<UserHelpText>extension_tokenSuccess</UserHelpText>
+			</ClaimType>
+		</ClaimsSchema>
+		<ClaimsTransformations>
+			<ClaimsTransformation Id="CreateReadonlyEmailClaim" TransformationMethod="FormatStringClaim">
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="email" TransformationClaimType="inputClaim" />
+				</InputClaims>
+				<InputParameters>
+					<InputParameter Id="stringFormat" DataType="string" Value="{0}" />
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="readonlyEmail" TransformationClaimType="outputClaim" />
+				</OutputClaims>
+			</ClaimsTransformation>
+			<ClaimsTransformation Id="CreateReadonlyDisplayNameClaim" TransformationMethod="FormatStringClaim">
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="displayName" TransformationClaimType="inputClaim" />
+				</InputClaims>
+				<InputParameters>
+					<InputParameter Id="stringFormat" DataType="string" Value="{0}" />
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="extension_customDisplayName" TransformationClaimType="outputClaim" />
+				</OutputClaims>		
+				</ClaimsTransformation>
+			<ClaimsTransformation Id="CreateReadonlyGivenNameClaim" TransformationMethod="FormatStringClaim">
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="givenName" TransformationClaimType="inputClaim" />
+				</InputClaims>
+				<InputParameters>
+					<InputParameter Id="stringFormat" DataType="string" Value="{0}" />
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="extension_customGivenName" TransformationClaimType="outputClaim" />
+				</OutputClaims>		
+				</ClaimsTransformation>
+			<ClaimsTransformation Id="CreateReadonlySurNameClaim" TransformationMethod="FormatStringClaim">
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="surName" TransformationClaimType="inputClaim" />
+				</InputClaims>
+				<InputParameters>
+					<InputParameter Id="stringFormat" DataType="string" Value="{0}" />
+				</InputParameters>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="extension_customSurName" TransformationClaimType="outputClaim" />
+				</OutputClaims>
+			</ClaimsTransformation>
+			
+			</ClaimsTransformations>
+
+			  <ContentDefinitions>
+		 			<ContentDefinition Id="api.localaccount.emailVerification">
+						<LoadUri>~/tenant/templates/AzureBlue/selfAsserted.cshtml</LoadUri>
+						<RecoveryUri>~/common/default_page_error.html</RecoveryUri>
+						<DataUri>urn:com:microsoft:aad:b2c:elements:contract:selfasserted:2.1.8</DataUri>
+						<Metadata>
+							<Item Key="DisplayName">Collect information from user page</Item>
+						</Metadata>
+						<LocalizedResourcesReferences MergeBehavior="Prepend">
+							<LocalizedResourcesReference Language="en" LocalizedResourcesReferenceId="api.localaccount.emailVerification.en" />
+						</LocalizedResourcesReferences>
+					</ContentDefinition>
+				</ContentDefinitions>
+
+				<Localization Enabled="true">
+					<SupportedLanguages DefaultLanguage="en" MergeBehavior="ReplaceAll">
+						<SupportedLanguage>en</SupportedLanguage>
+					</SupportedLanguages>
+					<LocalizedResources Id="api.localaccount.emailVerification.en">
+						<LocalizedStrings>
+							<LocalizedString ElementType="UxElement" StringId="button_continue">Continue</LocalizedString>
+						</LocalizedStrings>
+					</LocalizedResources>
+				</Localization>
+			</BuildingBlocks>
+
+	<ClaimsProviders>
+		<ClaimsProvider>
+			<DisplayName>Email Verification</DisplayName>
+			<TechnicalProfiles>
+				<!--Email verification only-->
+				<TechnicalProfile Id="EmailVerification">
+					<DisplayName>Initiate Email Address Verification For Local Account</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+					<Metadata>
+						<Item Key="ContentDefinitionReferenceId">api.localaccount.emailVerification</Item>
+						<Item Key="language.button_continue">Continue</Item>
+					</Metadata>
+					<OutputClaims>
+						<OutputClaim ClaimTypeReferenceId="email" PartnerClaimType="Verified.Email" Required="true" />						
+					</OutputClaims>
+					<ValidationTechnicalProfiles>
+						<ValidationTechnicalProfile ReferenceId="REST-GetProfile" />
+					</ValidationTechnicalProfiles>
+				</TechnicalProfile>
+			
+			</TechnicalProfiles>
+		</ClaimsProvider>
+		<ClaimsProvider>
+			<DisplayName>REST APIs</DisplayName>
+			<TechnicalProfiles>
+				<TechnicalProfile Id="REST-GetProfile">
+					<DisplayName>Get user extended profile Azure Function web hook</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+					<Metadata>
+						<!-- Set the ServiceUrl with your own REST API endpoint -->
+						<Item Key="ServiceUrl">https://customclaimapp.azurewebsites.net/api/ValidateExternalUser?code=7QHUaWEJdtz6VrrJiEjaafZYXh_YSqibtKaRGeSOtq6TAzFuW4Byig==</Item>
+						<Item Key="SendClaimsIn">Body</Item>
+						<!-- Set AuthenticationType to Basic or ClientCertificate in production environments -->
+						<Item Key="AuthenticationType">None</Item>
+						<!-- REMOVE the following line in production environments -->
+						<Item Key="AllowInsecureAuthInProduction">true</Item>
+					   <Item Key="DebugMode">true</Item>
+					</Metadata>
+					<InputClaims>
+						<!-- Claims sent to your REST API -->
+						<InputClaim ClaimTypeReferenceId="email" />
+						
+					</InputClaims>
+					<OutputClaims>
+						<!-- Claims parsed from your REST API -->
+						<OutputClaim ClaimTypeReferenceId="migrationRequired" />
+						<OutputClaim ClaimTypeReferenceId="tokenSuccess" />
+						<OutputClaim ClaimTypeReferenceId="readonlyGivenName" />
+						<!--<OutputClaim ClaimTypeReferenceId="extension_customDisplayName"/>-->
+						<OutputClaim ClaimTypeReferenceId="displayName" PartnerClaimType="extension_customDisplayName" Required="true" />
+						<OutputClaim ClaimTypeReferenceId="givenName" PartnerClaimType="extension_customGivenName" Required="true" />
+						<OutputClaim ClaimTypeReferenceId="surName" PartnerClaimType="extension_customSurName" Required="true" />
+						<!--PartnerClaimType="displayName"-->
+					</OutputClaims>
+					<UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+				</TechnicalProfile>
+			</TechnicalProfiles>
+		</ClaimsProvider>
+		<ClaimsProvider>
+			<DisplayName>Local Account</DisplayName>
+			<TechnicalProfiles>
+				<!--Sign-up self-asserted technical profile without Email verification-->
+				<TechnicalProfile Id="LocalAccountSignUpWithReadOnlyEmail">
+					<DisplayName>Email signup</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+					<Metadata>
+						<Item Key="IpAddressClaimReferenceId">IpAddress</Item>
+						<Item Key="ContentDefinitionReferenceId">api.localaccountsignup</Item>
+						<Item Key="language.button_continue">Create</Item>
+						<!-- Remove sign-up email verification -->
+						<Item Key="EnforceEmailVerification">False</Item>
+					</Metadata>
+					<InputClaimsTransformations>
+						<InputClaimsTransformation ReferenceId="CreateReadonlyEmailClaim" />
+						<InputClaimsTransformation ReferenceId="CreateReadonlyDisplayNameClaim" />
+						<InputClaimsTransformation ReferenceId="CreateReadonlyGivenNameClaim" />
+						<InputClaimsTransformation ReferenceId="CreateReadonlySurNameClaim" />
+					</InputClaimsTransformations>			
+					<InputClaims>
+						<!--Sample: Set input the ReadOnlyEmail claim type to prefilled the email address-->
+						<InputClaim ClaimTypeReferenceId="readOnlyEmail" />
+						<InputClaim ClaimTypeReferenceId="displayName" DefaultValue="John" />
+						<InputClaim ClaimTypeReferenceId="givenName" DefaultValue="John" />
+						<InputClaim ClaimTypeReferenceId="surName" DefaultValue="John" />						
+					</InputClaims>
+					<OutputClaims>
+						<OutputClaim ClaimTypeReferenceId="objectId" />
+						<!-- Sample: Display the ReadOnlyEmail claim type (instead of email claim type)-->
+						<OutputClaim ClaimTypeReferenceId="readOnlyEmail" Required="true" />
+						<OutputClaim ClaimTypeReferenceId="newPassword" Required="true" />
+						<OutputClaim ClaimTypeReferenceId="reenterPassword" Required="true" />
+						<OutputClaim ClaimTypeReferenceId="executed-SelfAsserted-Input" DefaultValue="true" />
+						<OutputClaim ClaimTypeReferenceId="authenticationSource" />
+						<OutputClaim ClaimTypeReferenceId="newUser" />
+						<!-- Optional claims, to be collected from the user -->					
+						<OutputClaim ClaimTypeReferenceId="displayName" />			
+						<!--<OutputClaim ClaimTypeReferenceId="extension_customDisplayName" />-->
+						<OutputClaim ClaimTypeReferenceId="givenName" />
+						<OutputClaim ClaimTypeReferenceId="surName" DefaultValue="Doe" />
+					</OutputClaims>
+					<ValidationTechnicalProfiles>
+						<ValidationTechnicalProfile ReferenceId="AAD-UserWriteUsingLogonEmail" />
+					</ValidationTechnicalProfiles>
+					<!-- Sample: Disable session management for sign-up page -->
+					<UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+				</TechnicalProfile>
+			</TechnicalProfiles>
+		</ClaimsProvider>
+
+		<ClaimsProvider>
+			<DisplayName>Azure Active Directory</DisplayName>
+			<TechnicalProfiles>
+				<TechnicalProfile Id="AAD-Common">
+					<Metadata>
+						<!--Insert b2c-extensions-app application ID here, for example: 11111111-1111-1111-1111-111111111111-->
+						<Item Key="ClientId">5aad7a3d-c5b9-4f33-9b89-59508f963e91</Item>
+						<!--Insert b2c-extensions-app application ObjectId here, for example: 22222222-2222-2222-2222-222222222222-->
+						<Item Key="ApplicationObjectId">ece97dda-72d8-42ad-97ee-ea4412d56a37</Item>
+					</Metadata>
+				</TechnicalProfile>
+			</TechnicalProfiles>
+		</ClaimsProvider>
+
+	</ClaimsProviders>
+	<UserJourneys>
+		<UserJourney Id="SignUpOrSignIn_Custom">
+			<OrchestrationSteps>
+				<OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+					<ClaimsProviderSelections>
+						<ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
+					</ClaimsProviderSelections>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+						
+					</ClaimsExchanges>
+				</OrchestrationStep>
+
+				<!-- Check if the user has selected to sign in using one of the social providers -->
+				<OrchestrationStep Order="2" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+							<Value>objectId</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="SignUpWithLogonEmailExchange_EmailVerification" TechnicalProfileReferenceId="EmailVerification" />
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<OrchestrationStep Order="3" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+							<Value>objectId</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="GetDisplayNameFromAPI" TechnicalProfileReferenceId="REST-GetProfile" />
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<OrchestrationStep Order="4" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+							<Value>objectId</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="SignUpWithLogonEmailExchange_WithReadOnlyEmail" TechnicalProfileReferenceId="LocalAccountSignUpWithReadOnlyEmail" />
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<OrchestrationStep Order="5" Type="ClaimsExchange">
+					<ClaimsExchanges>
+						<ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<OrchestrationStep Order="6" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+			</OrchestrationSteps>
+		</UserJourney>
+	</UserJourneys>
+
+	<RelyingParty>
+		<DefaultUserJourney ReferenceId="SignUpOrSignIn_Custom" />
+		<TechnicalProfile Id="PolicyProfile">
+			<DisplayName>PolicyProfile</DisplayName>
+			<Protocol Name="OpenIdConnect" />
+			<OutputClaims>
+				<OutputClaim ClaimTypeReferenceId="displayName" />
+				<OutputClaim ClaimTypeReferenceId="givenName" />
+				<OutputClaim ClaimTypeReferenceId="surname" />
+				<!--<OutputClaim ClaimTypeReferenceId="email" />-->
+				<OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub"/>
+				<OutputClaim ClaimTypeReferenceId="identityProvider" DefaultValue="" />
+				<OutputClaim ClaimTypeReferenceId="extension_customDisplayName" DefaultValue="This is default Value" />
+				<OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true" DefaultValue="{Policy:TenantObjectId}" />
+			</OutputClaims>
+			<SubjectNamingInfo ClaimType="sub" />
+		</TechnicalProfile>
+	</RelyingParty>
+</TrustFrameworkPolicy>
