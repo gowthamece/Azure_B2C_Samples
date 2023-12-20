@@ -10,7 +10,7 @@
 
   <BasePolicy>
     <TenantId>gowthamcbe.onmicrosoft.com</TenantId>
-    <PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
+    <PolicyId>B2C_1A_TrustFrameworkExtensions_RESTAPI</PolicyId>
   </BasePolicy>
 
   <RelyingParty>
@@ -29,6 +29,7 @@
         <OutputClaim ClaimTypeReferenceId="email" />
         <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub"/>
         <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true" DefaultValue="{Policy:TenantObjectId}" />
+		  <OutputClaim ClaimTypeReferenceId="age" DefaultValue="" />
 
       </OutputClaims>
       <SubjectNamingInfo ClaimType="sub" />

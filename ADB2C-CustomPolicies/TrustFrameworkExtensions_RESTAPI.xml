@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TrustFrameworkPolicy
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06"
+  PolicySchemaVersion="0.3.0.0"
+  TenantId="gowthamcbe.onmicrosoft.com"
+  PolicyId="B2C_1A_TrustFrameworkExtensions_RESTAPI"
+  PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions_RESTAPI">
+
+	<BasePolicy>
+		<TenantId>gowthamcbe.onmicrosoft.com</TenantId>
+		<PolicyId>B2C_1A_TrustFrameworkLocalization</PolicyId>
+	</BasePolicy>
+	<BuildingBlocks>
+		<ClaimsSchema>
+			<ClaimType Id="age">
+				<DisplayName>Your Age</DisplayName>
+				<DataType>string</DataType>
+			</ClaimType>
+
+		</ClaimsSchema>
+	</BuildingBlocks>
+
+	<ClaimsProviders>
+		<ClaimsProvider>
+			<DisplayName>REST APIs</DisplayName>
+			<TechnicalProfiles>
+				<TechnicalProfile Id="REST-GetProfileAge">
+					<DisplayName>Get user extended profile Azure Function web hook</DisplayName>
+					<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+					<Metadata>
+						<!-- Set the ServiceUrl with your own REST API endpoint -->
+						<Item Key="ServiceUrl">https://customclaimapp.azurewebsites.net/api/GetUserAge?code=Jez8iHjkzpwWm-gU524IFF4ywVi2h4guEMaaH_YxB4M3AzFu2-XAXg==</Item>
+						<Item Key="SendClaimsIn">Body</Item>
+						<!-- Set AuthenticationType to Basic or ClientCertificate in production environments -->
+						<Item Key="AuthenticationType">None</Item>
+						<!-- REMOVE the following line in production environments -->
+						<Item Key="AllowInsecureAuthInProduction">true</Item>
+					</Metadata>
+					<InputClaims>
+						<!-- Claims sent to your REST API -->
+						<InputClaim ClaimTypeReferenceId="signInName" PartnerClaimType="email" />
+					</InputClaims>
+					<OutputClaims>
+						<!-- Claims parsed from your REST API -->
+						<OutputClaim ClaimTypeReferenceId="age" />
+					</OutputClaims>
+					<UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+				</TechnicalProfile>
+			</TechnicalProfiles>
+		</ClaimsProvider>
+
+
+		<ClaimsProvider>
+			<DisplayName>Local Account SignIn</DisplayName>
+			<TechnicalProfiles>
+				<TechnicalProfile Id="login-NonInteractive">
+					<Metadata>
+						<Item Key="client_id">ProxyIdentityExperienceFrameworkAppId</Item>
+						<Item Key="IdTokenAudience">IdentityExperienceFrameworkAppId</Item>
+					</Metadata>
+					<InputClaims>
+						<InputClaim ClaimTypeReferenceId="client_id" DefaultValue="ProxyIdentityExperienceFrameworkAppId" />
+						<InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="IdentityExperienceFrameworkAppId" />
+					</InputClaims>
+				</TechnicalProfile>
+			</TechnicalProfiles>
+		</ClaimsProvider>
+
+	</ClaimsProviders>
+
+	<UserJourneys>
+
+		<UserJourney Id="SignUpOrSignIn">
+			<OrchestrationSteps>
+
+				<OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+					<ClaimsProviderSelections>
+						<ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
+					</ClaimsProviderSelections>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+					</ClaimsExchanges>
+				</OrchestrationStep>
+
+				<OrchestrationStep Order="2" Type="ClaimsExchange">
+					<Preconditions>
+						<Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+							<Value>objectId</Value>
+							<Action>SkipThisOrchestrationStep</Action>
+						</Precondition>
+					</Preconditions>
+					<ClaimsExchanges>
+						<ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+					</ClaimsExchanges>
+				</OrchestrationStep>
+
+				<!-- This step reads any user attributes that we may not have received when in the token. -->
+				<OrchestrationStep Order="3" Type="ClaimsExchange">
+					<ClaimsExchanges>
+						<ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<OrchestrationStep Order="4" Type="ClaimsExchange">
+					<ClaimsExchanges>
+						<ClaimsExchange Id="RESTGetProfile" TechnicalProfileReferenceId="REST-GetProfileAge" />
+					</ClaimsExchanges>
+				</OrchestrationStep>
+				<OrchestrationStep Order="5" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+
+			</OrchestrationSteps>
+			<ClientDefinition ReferenceId="DefaultWeb" />
+		</UserJourney>
+	</UserJourneys>
+	<!--UserJourneys>
+	
+	</UserJourneys-->
+
+</TrustFrameworkPolicy>
