@@ -3,3 +3,5 @@
 ################################################################################
 
 /.vs
+/AD-B2C-Migration/B2C-ms-graph/B2C-ms-graph/bin/Debug/net8.0
+/AD-B2C-Migration/B2C-ms-graph/B2C-ms-graph/obj
