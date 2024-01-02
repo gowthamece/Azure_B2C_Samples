@@ -2,6 +2,7 @@
 using Microsoft.Graph.Models;
 using Microsoft.Graph;
 using System.Text.Json;
+using System.Net.NetworkInformation;
 
 
 namespace B2C_ms_graph.Services
@@ -288,6 +289,60 @@ namespace B2C_ms_graph.Services
             }
         }
 
+        public static async Task CreateUser(GraphServiceClient graphClient,string tenantId)
+        {
+            try
+            {
+                // Create user
+                var result = await graphClient.Users
+                .PostAsync(new User
+                {
+                    GivenName = "Test",
+                    Surname = "B2C",
+                    DisplayName = "Test B2C",
+                    Identities = new List<ObjectIdentity>
+                    {
+                        new ObjectIdentity()
+                        {
+                            SignInType = "emailAddress",
+                            Issuer = tenantId,
+                            IssuerAssignedId = "testb2cgowtham03@gmail.com"
+                        }
+                    },
+                    PasswordProfile = new PasswordProfile()
+                    {
+                        Password = Helpers.PasswordHelper.GenerateNewPassword(4, 8, 4)
+                    },
+                    PasswordPolicies = "DisablePasswordExpiration",
+                    
+                });
+
+                string userId = result.Id;
+
+                Console.WriteLine($"Created the new user. Now get the created user with object ID '{userId}'...");
+
+                // Get created user by object ID
+                result = await graphClient.Users[userId]
+                    .GetAsync();
+
+                if (result != null)
+                {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine($"DisplayName: {result.DisplayName}");
+                    Console.WriteLine();
+                    Console.ResetColor();
+                    Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+                }
+            }
+             catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
+            }
+        }
+    
+    
         public static async Task CreateUserWithCustomAttribute(GraphServiceClient graphClient, string b2cExtensionAppClientId, string tenantId)
         {
             if (string.IsNullOrWhiteSpace(b2cExtensionAppClientId))

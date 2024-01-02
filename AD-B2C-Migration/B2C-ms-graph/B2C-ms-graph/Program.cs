@@ -40,12 +40,15 @@ while (true)
             await UserService.BulkCreate(config, graphClient);
             break;
         case "7":
-            await UserService.CreateUserWithCustomAttribute(graphClient, config.B2cExtensionAppClientId, config.TenantId);
+            await UserService.CreateUser(graphClient, config.TenantId);
             break;
         case "8":
-            await UserService.ListUsersWithCustomAttribute(graphClient, config.B2cExtensionAppClientId);
+            await UserService.CreateUserWithCustomAttribute(graphClient, config.B2cExtensionAppClientId, config.TenantId);
             break;
         case "9":
+            await UserService.ListUsersWithCustomAttribute(graphClient, config.B2cExtensionAppClientId);
+            break;
+        case "10":
             await UserService.CountUsers(graphClient);
             break;
         case "help":
@@ -75,9 +78,10 @@ while (true)
             Console.WriteLine("[4]      Delete user by object ID");
             Console.WriteLine("[5]      Update user password");
             Console.WriteLine("[6]      Create users (bulk import)");
-            Console.WriteLine("[7]      Create user with custom attributes and show result");
-            Console.WriteLine("[8]      Get all users (one page) with custom attributes");
-            Console.WriteLine("[9]      Get the number of useres in the directory");
+            Console.WriteLine("[7]      Create user");
+            Console.WriteLine("[8]      Create user with custom attributes and show result");
+            Console.WriteLine("[9]      Get all users (one page) with custom attributes");
+            Console.WriteLine("[10]      Get the number of useres in the directory");
             Console.WriteLine("[help]   Show available commands");
             Console.WriteLine("[exit]   Exit the program");
             Console.WriteLine("-------------------------");
