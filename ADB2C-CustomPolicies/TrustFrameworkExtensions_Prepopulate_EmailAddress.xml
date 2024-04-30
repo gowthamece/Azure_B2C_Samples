@@ -5,61 +5,17 @@
   </BasePolicy>
   <BuildingBlocks>
     <ClaimsSchema>
-      <ClaimType Id="age">
-        <DisplayName>Your Age</DisplayName>
-        <DataType>string</DataType>
-      </ClaimType>
-		<ClaimType Id="readonlyEmail">
-			<DisplayName>E-mail Address</DisplayName>
-			<DataType>string</DataType>
-			<UserInputType>Readonly</UserInputType>
-		</ClaimType>
 		<ClaimType Id="email">
 			<DisplayName>Email Address</DisplayName>
 			<DataType>string</DataType>
 			<UserInputType>Readonly</UserInputType>
 		</ClaimType>
     </ClaimsSchema>
-	  <ClaimsTransformations>
-		  <ClaimsTransformation Id="CreateReadonlyEmailClaim" TransformationMethod="FormatStringClaim">
-			  <InputClaims>
-				  <InputClaim ClaimTypeReferenceId="email" TransformationClaimType="inputClaim" />
-			  </InputClaims>
-			  <InputParameters>
-				  <InputParameter Id="stringFormat" DataType="string" Value="{0}" />
-			  </InputParameters>
-			  <OutputClaims>
-				  <OutputClaim ClaimTypeReferenceId="readonlyEmail" TransformationClaimType="outputClaim" />
-			  </OutputClaims>
-		  </ClaimsTransformation>
-	  </ClaimsTransformations>
   </BuildingBlocks>
   <ClaimsProviders>
     <ClaimsProvider>
       <DisplayName>REST APIs</DisplayName>
       <TechnicalProfiles>
-        <TechnicalProfile Id="REST-GetProfileAge">
-          <DisplayName>Get user extended profile Azure Function web hook</DisplayName>
-          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-          <Metadata>
-            <!-- Set the ServiceUrl with your own REST API endpoint -->
-            <Item Key="ServiceUrl">https://customclaimapp.azurewebsites.net/api/GetUserAge?code=Jez8iHjkzpwWm-gU524IFF4ywVi2h4guEMaaH_YxB4M3AzFu2-XAXg==</Item>
-            <Item Key="SendClaimsIn">Body</Item>
-            <!-- Set AuthenticationType to Basic or ClientCertificate in production environments -->
-            <Item Key="AuthenticationType">None</Item>
-            <!-- REMOVE the following line in production environments -->
-            <Item Key="AllowInsecureAuthInProduction">true</Item>
-          </Metadata>
-          <InputClaims>
-            <!-- Claims sent to your REST API -->
-            <InputClaim ClaimTypeReferenceId="signInName" PartnerClaimType="email" />
-          </InputClaims>
-          <OutputClaims>
-            <!-- Claims parsed from your REST API -->
-            <OutputClaim ClaimTypeReferenceId="age" />
-          </OutputClaims>
-          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
-        </TechnicalProfile>
 		  <TechnicalProfile Id="LocalAccountSignUpWithLogonEmail">
 			  <DisplayName>Email signup</DisplayName>
 			  <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
