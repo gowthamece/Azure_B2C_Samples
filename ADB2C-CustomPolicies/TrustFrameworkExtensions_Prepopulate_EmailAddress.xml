@@ -1,0 +1,182 @@
+<TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" TenantId="gowthamcbe.onmicrosoft.com" PolicyId="B2C_1A_TrustFrameworkExtensions" PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions_RESTAPI" TenantObjectId="cc2ed587-ab5d-454f-a433-035a5aa8a95c">
+  <BasePolicy>
+    <TenantId>gowthamcbe.onmicrosoft.com</TenantId>
+    <PolicyId>B2C_1A_TrustFrameworkLocalization</PolicyId>
+  </BasePolicy>
+  <BuildingBlocks>
+    <ClaimsSchema>
+      <ClaimType Id="age">
+        <DisplayName>Your Age</DisplayName>
+        <DataType>string</DataType>
+      </ClaimType>
+		<ClaimType Id="readonlyEmail">
+			<DisplayName>E-mail Address</DisplayName>
+			<DataType>string</DataType>
+			<UserInputType>Readonly</UserInputType>
+		</ClaimType>
+		<ClaimType Id="email">
+			<DisplayName>Email Address</DisplayName>
+			<DataType>string</DataType>
+			<UserInputType>Readonly</UserInputType>
+		</ClaimType>
+    </ClaimsSchema>
+	  <ClaimsTransformations>
+		  <ClaimsTransformation Id="CreateReadonlyEmailClaim" TransformationMethod="FormatStringClaim">
+			  <InputClaims>
+				  <InputClaim ClaimTypeReferenceId="email" TransformationClaimType="inputClaim" />
+			  </InputClaims>
+			  <InputParameters>
+				  <InputParameter Id="stringFormat" DataType="string" Value="{0}" />
+			  </InputParameters>
+			  <OutputClaims>
+				  <OutputClaim ClaimTypeReferenceId="readonlyEmail" TransformationClaimType="outputClaim" />
+			  </OutputClaims>
+		  </ClaimsTransformation>
+	  </ClaimsTransformations>
+  </BuildingBlocks>
+  <ClaimsProviders>
+    <ClaimsProvider>
+      <DisplayName>REST APIs</DisplayName>
+      <TechnicalProfiles>
+        <TechnicalProfile Id="REST-GetProfileAge">
+          <DisplayName>Get user extended profile Azure Function web hook</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <!-- Set the ServiceUrl with your own REST API endpoint -->
+            <Item Key="ServiceUrl">https://customclaimapp.azurewebsites.net/api/GetUserAge?code=Jez8iHjkzpwWm-gU524IFF4ywVi2h4guEMaaH_YxB4M3AzFu2-XAXg==</Item>
+            <Item Key="SendClaimsIn">Body</Item>
+            <!-- Set AuthenticationType to Basic or ClientCertificate in production environments -->
+            <Item Key="AuthenticationType">None</Item>
+            <!-- REMOVE the following line in production environments -->
+            <Item Key="AllowInsecureAuthInProduction">true</Item>
+          </Metadata>
+          <InputClaims>
+            <!-- Claims sent to your REST API -->
+            <InputClaim ClaimTypeReferenceId="signInName" PartnerClaimType="email" />
+          </InputClaims>
+          <OutputClaims>
+            <!-- Claims parsed from your REST API -->
+            <OutputClaim ClaimTypeReferenceId="age" />
+          </OutputClaims>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+        </TechnicalProfile>
+		  <TechnicalProfile Id="LocalAccountSignUpWithLogonEmail">
+			  <DisplayName>Email signup</DisplayName>
+			  <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+			  <Metadata>
+				  <Item Key="IpAddressClaimReferenceId">IpAddress</Item>
+				  <Item Key="ContentDefinitionReferenceId">api.localaccountsignup</Item>
+				  <Item Key="IncludeClaimResolvingInClaimsHandling">true</Item>
+			  </Metadata>
+			  <CryptographicKeys>
+				  <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
+			  </CryptographicKeys>
+			  <!--<InputClaimsTransformations>
+				  <InputClaimsTransformation ReferenceId="CreateReadonlyEmailClaim" />
+			  </InputClaimsTransformations>-->
+			  <InputClaims>
+				  <InputClaim ClaimTypeReferenceId="email" DefaultValue="{OAUTH-KV:email}" AlwaysUseDefaultValue="true" />
+				  <!--<InputClaim ClaimTypeReferenceId="email"   />-->
+			  </InputClaims>
+			  <OutputClaims>
+				  <OutputClaim ClaimTypeReferenceId="objectId" />
+				  <!--<OutputClaim ClaimTypeReferenceId="readOnlyEmail" Required="true" />-->
+				  <OutputClaim ClaimTypeReferenceId="email" PartnerClaimType="Verified.Email" Required="true" />
+				  <OutputClaim ClaimTypeReferenceId="newPassword" Required="true" />
+				  <OutputClaim ClaimTypeReferenceId="reenterPassword" Required="true" />
+				  <OutputClaim ClaimTypeReferenceId="executed-SelfAsserted-Input" DefaultValue="true" />
+				  <OutputClaim ClaimTypeReferenceId="authenticationSource" />
+				  <OutputClaim ClaimTypeReferenceId="newUser" />
+				  <!-- Optional claims, to be collected from the user -->
+				  <OutputClaim ClaimTypeReferenceId="displayName" />
+				  <OutputClaim ClaimTypeReferenceId="givenName" />
+				  <OutputClaim ClaimTypeReferenceId="surName" />
+			  </OutputClaims>
+			  <ValidationTechnicalProfiles>
+				  <ValidationTechnicalProfile ReferenceId="AAD-UserWriteUsingLogonEmail" />
+			  </ValidationTechnicalProfiles>
+			  <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
+		  </TechnicalProfile>
+      </TechnicalProfiles>
+    </ClaimsProvider>
+    <ClaimsProvider>
+      <DisplayName>Local Account SignIn</DisplayName>
+      <TechnicalProfiles>
+        <TechnicalProfile Id="login-NonInteractive">
+          <Metadata>
+            <Item Key="client_id">acc288dc-da01-4136-87c7-31bdcf71b3e6</Item>
+            <Item Key="IdTokenAudience">37456243-5761-4514-b6af-429614c03359</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="acc288dc-da01-4136-87c7-31bdcf71b3e6" />
+            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="37456243-5761-4514-b6af-429614c03359" />
+          </InputClaims>
+        </TechnicalProfile>
+      </TechnicalProfiles>
+    </ClaimsProvider>
+  </ClaimsProviders>
+  <UserJourneys>
+    <UserJourney Id="SignUpOrSignIn">
+      <OrchestrationSteps>
+        <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+          <ClaimsProviderSelections>
+            <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
+          </ClaimsProviderSelections>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>objectId</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <!-- This step reads any user attributes that we may not have received when in the token. -->
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <!--<OrchestrationStep Order="4" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="RESTGetProfile" TechnicalProfileReferenceId="REST-GetProfileAge" />
+          </ClaimsExchanges>
+        </OrchestrationStep>-->
+        <OrchestrationStep Order="4" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+      </OrchestrationSteps>
+      <ClientDefinition ReferenceId="DefaultWeb" />
+    </UserJourney>
+
+	  <UserJourney Id="SignUp">
+		  <OrchestrationSteps>
+
+			  <OrchestrationStep Order="1" Type="ClaimsExchange">
+				  <ClaimsExchanges>
+					  <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+				  </ClaimsExchanges>
+			  </OrchestrationStep>
+
+			  <!-- This step reads any user attributes that we may not have received when in the token. -->
+			  <OrchestrationStep Order="2" Type="ClaimsExchange">
+				  <ClaimsExchanges>
+					  <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+				  </ClaimsExchanges>
+			  </OrchestrationStep>
+
+			  <OrchestrationStep Order="3" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+
+		  </OrchestrationSteps>
+		  <ClientDefinition ReferenceId="DefaultWeb" />
+	  </UserJourney>
+
+  </UserJourneys>
+  <!--UserJourneys>
+	
+	</UserJourneys-->
+</TrustFrameworkPolicy>
