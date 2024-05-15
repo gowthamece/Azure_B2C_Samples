@@ -68,7 +68,7 @@
       </ClaimType>
 
       <ClaimType Id="signInNames.emailAddress">
-        <DisplayName>Email Address</DisplayName>
+        <DisplayName></DisplayName>
         <DataType>string</DataType>
         <UserHelpText>Email address to use for signing in.</UserHelpText>
         <UserInputType>TextBox</UserInputType>
@@ -217,7 +217,7 @@
       </ClaimType>
 
       <ClaimType Id="email">
-        <DisplayName>Email Address</DisplayName>
+        <DisplayName></DisplayName>
         <DataType>string</DataType>
         <DefaultPartnerClaimTypes>
           <Protocol Name="OpenIdConnect" PartnerClaimType="email" />
@@ -1036,7 +1036,7 @@
             <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
           </CryptographicKeys>
           <InputClaims>
-            <InputClaim ClaimTypeReferenceId="email" DefaultValue="{OAUTH-KV:email}" AlwaysUseDefaultValue="true" />
+            <InputClaim ClaimTypeReferenceId="email"  AlwaysUseDefaultValue="true" />
           </InputClaims>
           <DisplayClaims>
             <DisplayClaim DisplayControlReferenceId="emailVerificationControl" />
@@ -1050,7 +1050,7 @@
           </DisplayClaims>
           <OutputClaims>
             <OutputClaim ClaimTypeReferenceId="objectId" />
-            <OutputClaim ClaimTypeReferenceId="email" DefaultValue= "{OAUTH-KV:email}" AlwaysUseDefaultValue="true"/>
+            <OutputClaim ClaimTypeReferenceId="email"  AlwaysUseDefaultValue="true"/>
             <OutputClaim ClaimTypeReferenceId="newPassword" Required="true" />
             <OutputClaim ClaimTypeReferenceId="reenterPassword" Required="true" />
             <OutputClaim ClaimTypeReferenceId="executed-SelfAsserted-Input" DefaultValue="true" />
@@ -1302,7 +1302,7 @@
             <Item Key="Operation">SendCode</Item>
           </Metadata>
           <InputClaims>
-            <InputClaim ClaimTypeReferenceId="email" PartnerClaimType="emailAddress" DefaultValue="{OAUTH-KV:email}"   />
+            <InputClaim ClaimTypeReferenceId="email" PartnerClaimType="emailAddress" />
           </InputClaims>
         </TechnicalProfile>
         <TechnicalProfile Id="AadSspr-VerifyCode">
@@ -1313,7 +1313,7 @@
           </Metadata>
           <InputClaims>
             <InputClaim ClaimTypeReferenceId="verificationCode" />
-            <InputClaim ClaimTypeReferenceId="email" PartnerClaimType="emailAddress" DefaultValue="{OAUTH-KV:email}" />
+            <InputClaim ClaimTypeReferenceId="email" PartnerClaimType="emailAddress" />
           </InputClaims>
         </TechnicalProfile>
       </TechnicalProfiles>

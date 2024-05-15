@@ -11,13 +11,13 @@
     <ClaimsSchema>
       <!--TOTP claims-->
       <ClaimType Id="email">
-	<DisplayName>Email Address</DisplayName>
+	<DisplayName>Hello</DisplayName>
 	<DataType>string</DataType>
 	<UserInputType>Readonly</UserInputType>
     </ClaimType>
     
       <ClaimType Id="emails">
-        <DisplayName>Email Addresses</DisplayName>
+        <DisplayName></DisplayName>
         <DataType>stringCollection</DataType>
         <AdminHelpText>Email addresses of the user.</AdminHelpText>
         <UserHelpText>Your email addresses.</UserHelpText>
@@ -285,8 +285,33 @@
         </DisplayClaims>
       </DisplayControl>
 
+		<DisplayControl Id="emailVerificationControl" UserInterfaceControlType="VerificationControl">
+			<InputClaims>
+				<InputClaim ClaimTypeReferenceId="email" DefaultValue="{OAUTH-KV:email}" AlwaysUseDefaultValue="true"/>
+			</InputClaims>
+			<DisplayClaims>
+				<DisplayClaim ClaimTypeReferenceId="email" Required="true" />
+				<DisplayClaim ClaimTypeReferenceId="verificationCode" ControlClaimType="VerificationCode" Required="true" />
+			</DisplayClaims>
+			<OutputClaims></OutputClaims>
+			<Actions>
+				<Action Id="SendCode">
+					<ValidationClaimsExchange>
+						<ValidationClaimsExchangeTechnicalProfile TechnicalProfileReferenceId="AadSspr-SendCode" />
+					</ValidationClaimsExchange>
+				</Action>
+				<Action Id="VerifyCode">
+					<ValidationClaimsExchange>
+						<ValidationClaimsExchangeTechnicalProfile TechnicalProfileReferenceId="AadSspr-VerifyCode" />
+					</ValidationClaimsExchange>
+				</Action>
+			</Actions>
+		</DisplayControl>
     </DisplayControls>
 
+
+
+	  
     <!--End of TOTP contols-->
   </BuildingBlocks>
 
