@@ -11,7 +11,7 @@
     <ClaimsSchema>
       <!--TOTP claims-->
       <ClaimType Id="email">
-	<DisplayName>Hello</DisplayName>
+	<DisplayName>Email Address</DisplayName>
 	<DataType>string</DataType>
 	<UserInputType>Readonly</UserInputType>
     </ClaimType>
