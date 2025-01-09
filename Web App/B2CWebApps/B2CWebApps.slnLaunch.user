@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "WeatherAppMVC\\WeatherAppMVC.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "ToDoListAppMVC\\ToDoListAppMVC.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

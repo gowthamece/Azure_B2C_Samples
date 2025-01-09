@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "identityapp1": {
+      "connectionInfo": "App registration: WeatherApp01, Tenant: Gowtham CBE B2C (gowthamcbe.onmicrosoft.com - AAD B2C)",
+      "secretStore": null,
+      "resourceId": null,
+      "type": "identityapp.default"
+    }
+  }
+}

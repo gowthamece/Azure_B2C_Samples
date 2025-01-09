@@ -17,37 +17,61 @@
   </BuildingBlocks>
 
   <ClaimsProviders>
-
-    <ClaimsProvider>
-      <DisplayName>Facebook</DisplayName>
-      <TechnicalProfiles>
-        <!-- <TechnicalProfile Id="Facebook-OAUTH">
-          <Metadata>
-            <Item Key="client_id">facebook_clientid</Item>
-            <Item Key="scope">email public_profile</Item>
-            <Item Key="ClaimsEndpoint">https://graph.facebook.com/me?fields=id,first_name,last_name,name,email</Item>
-          </Metadata>
-        </TechnicalProfile> -->
-      </TechnicalProfiles>
-    </ClaimsProvider>
-
-
     <ClaimsProvider>
       <DisplayName>Local Account SignIn</DisplayName>
       <TechnicalProfiles>
+		  
          <TechnicalProfile Id="login-NonInteractive">
           <Metadata>
-            <Item Key="client_id">ProxyIdentityExperienceFrameworkAppId</Item>
-            <Item Key="IdTokenAudience">IdentityExperienceFrameworkAppId</Item>
+            <Item Key="client_id">acc288dc-da01-4136-87c7-31bdcf71b3e6</Item>
+            <Item Key="IdTokenAudience">37456243-5761-4514-b6af-429614c03359</Item>
           </Metadata>
           <InputClaims>
-            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="ProxyIdentityExperienceFrameworkAppId" />
-            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="IdentityExperienceFrameworkAppId" />
+            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="acc288dc-da01-4136-87c7-31bdcf71b3e6" />
+            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="37456243-5761-4514-b6af-429614c03359" />
           </InputClaims>
         </TechnicalProfile>
-      </TechnicalProfiles>
+		  
+
+
+	  </TechnicalProfiles>
     </ClaimsProvider>
 
+	  <ClaimsProvider>
+		  <DisplayName>Local Account SignIn</DisplayName>
+		  <TechnicalProfiles>
+			  <!-- JWT Token Issuer -->
+			  <TechnicalProfile Id="JwtIssuer">
+				  <DisplayName>JWT token Issuer</DisplayName>
+				  <Protocol Name="OpenIdConnect" />
+				  <OutputTokenFormat>JWT</OutputTokenFormat>
+				  <Metadata>
+					  <Item Key="AuthenticationContextReferenceClaimPattern">None</Item>
+				  </Metadata>
+				  <UseTechnicalProfileForSessionManagement ReferenceId="SM-jwt-issuer" />
+			  </TechnicalProfile>
+
+			  <!-- Session management technical profile for OIDC based tokens -->
+			  <TechnicalProfile Id="SM-jwt-issuer">
+				  <DisplayName>Session Management Provider</DisplayName>
+				  <Protocol Name="Proprietary" Handler="Web.TPEngine.SSO.OAuthSSOSessionProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+			  </TechnicalProfile>
+
+			  <!--SAML token issuer-->
+			  <TechnicalProfile Id="Saml2AssertionIssuer">
+				  <DisplayName>SAML token issuer</DisplayName>
+				  <Protocol Name="SAML2" />
+				  <OutputTokenFormat>SAML2</OutputTokenFormat>
+				  <UseTechnicalProfileForSessionManagement ReferenceId="SM-Saml-issuer" />
+			  </TechnicalProfile>
+
+			  <!-- Session management technical profile for SAML based tokens -->
+			  <TechnicalProfile Id="SM-Saml-issuer">
+				  <DisplayName>Session Management Provider</DisplayName>
+				  <Protocol Name="Proprietary" Handler="Web.TPEngine.SSO.SamlSSOSessionProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+			  </TechnicalProfile>
+		  </TechnicalProfiles>
+	  </ClaimsProvider>
   </ClaimsProviders>
 
     <!--UserJourneys>

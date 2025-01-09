@@ -5,3 +5,21 @@
 /.vs
 /AD-B2C-Migration/B2C-ms-graph/B2C-ms-graph/bin/Debug/net8.0
 /AD-B2C-Migration/B2C-ms-graph/B2C-ms-graph/obj
+/AD-B2C-Migration/B2C-ms-graph/.vs
+/ADB2C-CustomPolicies/Display Control - TOTP/.vs/Display Control - TOTP/CopilotIndices/17.13.196.30798
+*.sqlite
+/ADB2C-CustomPolicies/Display Control - TOTP/.vs/Display Control - TOTP/FileContentIndex
+/Web App/.vs/Web App/CopilotIndices/17.13.196.30798
+/Web App/.vs/Web App/FileContentIndex
+/Web App/.vs
+/Web App/B2CWebApps/.vs
+/Web App/B2CWebApps/ToDoListApp/.config
+/Web App/B2CWebApps/ToDoListApp/bin/Debug/net8.0
+/Web App/B2CWebApps/ToDoListApp/obj
+/Web App/B2CWebApps/ToDoListAppMVC/.config
+/Web App/B2CWebApps/ToDoListAppMVC/bin/Debug/net8.0
+/Web App/B2CWebApps/WeatherApp/.config
+/Web App/B2CWebApps/WeatherApp/bin/Debug/net8.0
+/Web App/B2CWebApps/WeatherApp/obj
+/Web App/B2CWebApps/WeatherAppMVC/.config
+/Web App/B2CWebApps/WeatherAppMVC/bin/Debug/net8.0
