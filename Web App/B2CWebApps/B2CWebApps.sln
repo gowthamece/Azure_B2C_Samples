@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35605.110 d17.13
+VisualStudioVersion = 17.13.35605.110
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToDoListApp", "ToDoListApp\ToDoListApp.csproj", "{87F414AB-68C9-4A85-A7BF-9DEAAD5C78DD}"
 EndProject
@@ -10,6 +10,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherAppMVC", "WeatherAppMVC\WeatherAppMVC.csproj", "{A0F9B304-575F-4CED-963A-A2107A9C393A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToDoListAppMVC", "ToDoListAppMVC\ToDoListAppMVC.csproj", "{A0741D08-E40E-4D2D-BC71-659EC62A4006}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "demoapp", "demoapp\demoapp.csproj", "{4C8968CD-9F1A-424E-8AEC-EAEB78B73A9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAppNetFramework", "WebAppNetFramework\WebAppNetFramework.csproj", "{1A068A56-C51E-417E-A2C5-8B593733E365}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +37,14 @@ Global
 		{A0741D08-E40E-4D2D-BC71-659EC62A4006}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0741D08-E40E-4D2D-BC71-659EC62A4006}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0741D08-E40E-4D2D-BC71-659EC62A4006}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C8968CD-9F1A-424E-8AEC-EAEB78B73A9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C8968CD-9F1A-424E-8AEC-EAEB78B73A9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C8968CD-9F1A-424E-8AEC-EAEB78B73A9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C8968CD-9F1A-424E-8AEC-EAEB78B73A9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A068A56-C51E-417E-A2C5-8B593733E365}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A068A56-C51E-417E-A2C5-8B593733E365}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A068A56-C51E-417E-A2C5-8B593733E365}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A068A56-C51E-417E-A2C5-8B593733E365}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
