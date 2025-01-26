@@ -6,5 +6,5 @@ to pre-populate the Display Name, First Name and Last Name fields in the sign up
 
 
 ## Azure AD B2C Web Applications 
-Created two web applications 1. [Weather app](Web App/B2CWebApps/WeatherAppMVC) and 2. To-Do-List app to demonstrate Secure Single sign-out  
+Created two web applications 1.[Weather App](https://github.com/gowthamece/Azure_B2C_Samples/tree/main/Web%20App/B2CWebApps/WeatherAppMVC) and 2. [To-Do-List app](https://github.com/gowthamece/Azure_B2C_Samples/tree/main/Web%20App/B2CWebApps/ToDoListAppMVC) to demonstrate [Secure Single sign-out](https://gowthamoncloud.com/secure-single-sign-out-in-azure-ad-b2c/).  
 
