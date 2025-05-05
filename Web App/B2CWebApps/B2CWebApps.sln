@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "demoapp", "demoapp\demoapp.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAppNetFramework", "WebAppNetFramework\WebAppNetFramework.csproj", "{1A068A56-C51E-417E-A2C5-8B593733E365}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ADB2C_AppRoles_Management", "ADB2C_AppRoles_Management\ADB2C_AppRoles_Management.csproj", "{098D0DCC-8E4E-4011-8081-360991F739DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{1A068A56-C51E-417E-A2C5-8B593733E365}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A068A56-C51E-417E-A2C5-8B593733E365}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A068A56-C51E-417E-A2C5-8B593733E365}.Release|Any CPU.Build.0 = Release|Any CPU
+		{098D0DCC-8E4E-4011-8081-360991F739DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{098D0DCC-8E4E-4011-8081-360991F739DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{098D0DCC-8E4E-4011-8081-360991F739DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{098D0DCC-8E4E-4011-8081-360991F739DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

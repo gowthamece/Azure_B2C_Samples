@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ADB2C_AppRoles_Management": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7204",
+      "launchBrowser": false
+    }
+  }
+}
