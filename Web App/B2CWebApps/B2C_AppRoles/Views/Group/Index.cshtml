@@ -1,0 +1,135 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model IEnumerable<Groups>
+
+@{
+    ViewData["Title"] = "Groups";
+}
+
+<h2>Groups</h2>
+
+<div class="container">
+    <div class="row">
+        <div id="mainContent" class="col-md-12">
+            @if (Model != null)
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            @* <th>Id</th> *@
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var group in Model)
+                        {
+                            <tr>
+                                @* <td>@group.Id</td> *@
+                                <td>@group.DispalyName</td>
+                                <td>@group.Type</td>
+                                <td>
+                                        @* <a asp-action="AssignMemberToGroupPartial"
+                                           asp-controller="Group"
+                                           asp-route-groupId="@group.Id"
+                                           asp-route-groupName="@group.DispalyName"
+                                           class="btn btn-primary"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#assignUsertoGroupModal"
+                                           data-group-id="@group.Id"
+                                           data-group-name="@group.DispalyName"
+                                           onclick="event.preventDefault(); loadAssignUserPartial(this);">
+                                            Manage User
+                                        </a> *@
+                                    <button type="button" class="btn btn-primary assign-role-btn"
+                                            data-group-id="@group.Id"
+                                            data-group-name="@group.DispalyName" >
+                                       Manage user
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div>No groups found.</div>
+            }
+        </div>
+        <div id="sidePanel" class="side-panel">
+            <div class="side-panel-content">
+                <button id="closeSidePanel" class="close-btn">&times;</button>
+                <div id="partialViewContainer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<style>
+    .container {
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    .side-panel {
+        position: fixed;
+        width: 0;
+        height: 100%;
+        top: 0;
+        right: 0;
+        background-color: #f8f9fa;
+        border-left: 1px solid #dee2e6;
+        overflow-x: hidden;
+        transition: 0.5s;
+        z-index: 1000;
+        padding-top: 60px;
+    }
+
+        .side-panel.open {
+            width: 900px;
+        }
+
+    .side-panel-content {
+        padding: 20px;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 30px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+    }
+</style>
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        // Handle assign role button click
+        $(".assign-role-btn").click(function () {
+            const groupId = $(this).data("group-id");
+            const groupName= $(this).data("group-name");
+            $("#partialViewContainer").load("/Group/GetUsersByGroupId", { groupId: groupId, groupName:groupName  }, function() {
+                $("#sidePanel").addClass("open");
+            });
+        });
+
+        // Handle close button click
+        $("#closeSidePanel").click(function() {
+            $("#sidePanel").removeClass("open");
+        });
+
+    });
+</script>
+

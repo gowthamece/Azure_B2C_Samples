@@ -1,0 +1,108 @@
+﻿@model IEnumerable<B2C_AppRoles.Models.AppRole>
+
+@{
+   ViewData["Title"] = "Role";
+    Layout = "_ContentNavbarLayout";
+}
+<h1>Role</h1>
+
+
+<div class="container">
+   <div class="row">
+       <div id="mainContent" class="col-md-12">
+                 <button type="button" onclick="location.href='@Url.Action("Create", "Role", new { appId = ViewData["AppId"] })'" class="btn btn-success mb-3" id="addRoleButton">Add Role</button>
+                 <table class="table">
+                     <thead>
+                         <tr>
+                             <th>Id</th>
+                             <th>Name</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         @foreach (var role in Model)
+                         {
+                             <tr>
+                                 <td>@role.Id</td>
+                                 <td>@role.Name</td>
+                                 <td>
+                                     <button type="button" class="btn btn-primary assign-role-btn" 
+                                             data-role-id="@role.Id" 
+                                             data-role-name="@role.Name" data-role-appId="@role.AppId">
+                                         Assign to user
+                                     </button>
+                                 </td>
+                             </tr>
+                         }
+                     </tbody>
+                 </table>
+             </div>
+       <div id="sidePanel" class="side-panel">
+           <div class="side-panel-content">
+               <button id="closeSidePanel" class="close-btn">&times;</button>
+               <div id="partialViewContainer"></div>
+           </div>
+       </div>
+   </div>
+</div>
+
+<style>
+   .container {
+       position: relative;
+       overflow-x: hidden;
+   }
+   
+   .side-panel {
+       position: fixed;
+       width: 0;
+       height: 100%;
+       top: 0;
+       right: 0;
+       background-color: #f8f9fa;
+       border-left: 1px solid #dee2e6;
+       overflow-x: hidden;
+       transition: 0.5s;
+       z-index: 1000;
+       padding-top: 60px;
+   }
+   
+   .side-panel.open {
+       width: 600px;
+   }
+   
+   .side-panel-content {
+       padding: 20px;
+   }
+   
+   .close-btn {
+       position: absolute;
+       top: 10px;
+       right: 20px;
+       font-size: 30px;
+       border: none;
+       background: transparent;
+       cursor: pointer;
+   }
+</style>
+
+
+ <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+   <script>  
+      $(document).ready(function () {  
+          // Handle assign role button click  
+          $(".assign-role-btn").click(function () {  
+              const roleId = $(this).closest("tr").find("td:first").text().trim();  
+              const roleName = $(this).data("role-name");  
+              const roleAppId = $(this).data("role-appid");  
+              $("#partialViewContainer").load("/Role/AssignRole", { id: roleId, name: roleName, appId: roleAppId }, function() {  
+                  $("#sidePanel").addClass("open");  
+              });  
+          });  
+            
+          // Handle close button click  
+          $("#closeSidePanel").click(function() {  
+              $("#sidePanel").removeClass("open");  
+          });  
+
+      });  
+   </script>
+ 

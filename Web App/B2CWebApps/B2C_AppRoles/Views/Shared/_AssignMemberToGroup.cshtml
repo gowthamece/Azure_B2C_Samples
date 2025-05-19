@@ -1,0 +1,158 @@
+﻿@model B2C_AppRoles.Models.AssignMemberToGroupViewModel
+@* <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-ENjdO4Dr2bkBIFxQpeoA6DQD1KQ2U5r9j7l+6nL/e59I1sL0y4nU5q6M5Q5r5+5M" crossorigin="anonymous">
+ *@
+<div>
+    <h5>
+        Assign user to group: <span class="text-primary">
+            @Model.GroupName</span></h5>
+    <input type="text" id="searchBox" class="form-control mb-2" placeholder="Search with email address" />
+    <ul id="autocompleteList" class="list-group" style="border: 1px solid #ccc; display: none; position: absolute; background: white; list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto;">
+        <!-- Autocomplete suggestions will be dynamically added here -->
+    </ul>
+    <table id="selectedUsersTable" class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>User Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Selected users will be dynamically added here -->
+        </tbody>
+    </table>
+    <button id="addUsersButton" class="btn btn-primary mt-2" data-group-Id="@Model.GroupId">Add Users</button>
+</div>
+@* 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
+
+@*<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+ *@
+<script type="text/javascript">
+    $(document).ready(function () {        
+        let typingTimer;
+        const typingDelay = 2000; // 2 seconds delay
+        const $searchBox = $('#searchBox');
+        const $autocompleteList = $('#autocompleteList');
+        const $selectedUsersTable = $('#selectedUsersTable tbody');
+
+        $searchBox.on('input', function () {
+            
+            clearTimeout(typingTimer);
+            const query = $(this).val().trim();
+
+            if (query.length > 0) {
+                typingTimer = setTimeout(function () {
+                    $.ajax({
+                         url: '/Member/GetUserByName',
+                        type: 'GET',
+                        data: { searchTerm: query },
+                        success: function (data) {
+                            $autocompleteList.empty(); // Clear existing suggestions
+
+                            if (data && data.length > 0) {
+                                data.forEach(user => {
+                                    const listItem = `<li class="list-group-item list-group-item-action" style="cursor: pointer;" data-id="${user.id}" data-name="${user.dispalyName}">${user.dispalyName}</li>`;
+                                    $autocompleteList.append(listItem);
+                                });
+                                $autocompleteList.show();
+                            } else {
+                                $autocompleteList.hide();
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error:', error);
+                        }
+                    });
+                }, typingDelay);
+            } else {
+                $autocompleteList.hide();
+            }
+        });
+
+        // Hide autocomplete list when clicking outside
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#searchBox, #autocompleteList').length) {
+                $autocompleteList.hide();
+            }
+        });
+
+        // Handle click on autocomplete suggestion
+        $autocompleteList.on('click', 'li', function () {
+            const selectedId = $(this).data('id');
+            const selectedName = $(this).data('name');
+
+            // Check for duplicates
+            if ($selectedUsersTable.find(`tr[data-id="${selectedId}"]`).length === 0) {
+                const newRow = `
+                    <tr data-id="${selectedId}">
+                        <td>${selectedName}</td>
+                        <td>
+                            <button class="removeUserBtn btn btn-danger btn-sm">Remove</button>
+                        </td>
+                    </tr>`;
+                $selectedUsersTable.append(newRow);
+            }
+
+            $searchBox.val('');
+            $autocompleteList.hide();
+        });
+
+        // Handle remove button click
+        $selectedUsersTable.on('click', '.removeUserBtn', function () {
+            $(this).closest('tr').remove();
+        });
+
+        // Handle Add Users button click
+        $('#addUsersButton').on('click', function () {
+            
+             const MemberIds = [];
+            $selectedUsersTable.find('tr').each(function () {
+                 MemberIds.push($(this).data('id'));
+            });
+              const groupId = $(this).data("group-id");
+
+                
+             if (MemberIds.length > 0) {
+                $.ajax({
+                     url: '/Group/AssignUserToGroup',
+                    type: 'POST',
+                    contentType: 'application/json',
+                       data: JSON.stringify({ MemberIds: MemberIds, groupId:groupId }),
+                    success: function (response) {
+                          $('#assignUsertoGroupModal').modal('hide'); // For Bootstrap modal
+                            alert('Users successfully assigned to the group.');                                            
+                            // Reload the _ManageUsers partial view with updated data
+                            // $("#partialViewContainer").load("/Group/GetUsersByGroupId?groupId=" + groupId);
+                                           
+                        $.ajax({
+                            url: '/Group/GetUsersByGroupId',
+                            type: 'POST',
+                            data: {
+                                groupId: groupId,
+                                groupName: '@Model.GroupName' // Or another variable if available
+                            },
+                            success: function (response) {
+                                $("#partialViewContainer").html(response);
+                            },
+                            error: function (xhr, status, error) {
+                                alert('Failed to load users.');
+                            }
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                        alert('An error occurred while assigning users.');
+                    }
+                });
+            } else {
+                alert('No users selected.');
+            }
+        });
+    });
+</script>
+@* 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
+
+@*<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+ *@
+

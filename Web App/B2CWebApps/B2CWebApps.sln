@@ -17,6 +17,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAppNetFramework", "WebAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ADB2C_AppRoles_Management", "ADB2C_AppRoles_Management\ADB2C_AppRoles_Management.csproj", "{098D0DCC-8E4E-4011-8081-360991F739DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "B2C_AppRoles", "B2C_AppRoles\B2C_AppRoles.csproj", "{484F3876-B471-4312-9CB5-286627931D5F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "B2C_AppRoleAssignment", "B2C_AppRoleAssignment\B2C_AppRoleAssignment.csproj", "{CD7820A8-52E9-4BC0-90E0-DBC903EE2B5E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +55,14 @@ Global
 		{098D0DCC-8E4E-4011-8081-360991F739DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{098D0DCC-8E4E-4011-8081-360991F739DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{098D0DCC-8E4E-4011-8081-360991F739DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{484F3876-B471-4312-9CB5-286627931D5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{484F3876-B471-4312-9CB5-286627931D5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{484F3876-B471-4312-9CB5-286627931D5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{484F3876-B471-4312-9CB5-286627931D5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD7820A8-52E9-4BC0-90E0-DBC903EE2B5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD7820A8-52E9-4BC0-90E0-DBC903EE2B5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD7820A8-52E9-4BC0-90E0-DBC903EE2B5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD7820A8-52E9-4BC0-90E0-DBC903EE2B5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

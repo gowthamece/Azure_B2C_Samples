@@ -1,0 +1,125 @@
+﻿<div>
+    
+   <input type="text" id="searchBox" placeholder="Enter a user name" />
+   <ul id="autocompleteList" style="border: 1px solid #ccc; display: none; position: absolute; background: white; list-style: none; padding: 0; margin: 0; width: 200px; max-height: 150px; overflow-y: auto;">
+       <!-- Autocomplete suggestions will be dynamically added here -->
+   </ul>
+   <table id="selectedUsersTable" style="margin-top: 20px; border-collapse: collapse; width: 100%; border: 1px solid #ccc;">
+       <thead>
+           <tr>
+               <th style="border: 1px solid #ccc; padding: 5px;">User Name</th>
+               <th style="border: 1px solid #ccc; padding: 5px;">Actions</th>
+           </tr>
+       </thead>
+       <tbody>
+           <!-- Selected users will be dynamically added here -->
+       </tbody>
+   </table>
+    <button id="addUsersButton" style="margin-top: 10px; padding: 5px 10px; cursor: pointer;" data-role-id="@ViewBag.RoleId" data-role-appId="@ViewBag.AppId">Add Users</button>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+   $(document).ready(function () {
+       let typingTimer;
+       const typingDelay = 2000; // 2 seconds delay
+       const $searchBox = $('#searchBox');
+       const $autocompleteList = $('#autocompleteList');
+       const $selectedUsersTable = $('#selectedUsersTable tbody');
+
+       $searchBox.on('input', function () {
+           clearTimeout(typingTimer);
+           const query = $(this).val().trim();
+
+           if (query.length > 0) {
+               typingTimer = setTimeout(function () {
+                   $.ajax({
+                        url: '/Member/GetUserByName',
+                       type: 'GET',
+                       data: { searchTerm: query },
+                       success: function (data) {
+                           $autocompleteList.empty(); // Clear existing suggestions
+
+                           if (data && data.length > 0) {
+                               data.forEach(user => {
+                                   const listItem = `<li style="padding: 5px; cursor: pointer;" data-id="${user.id}" data-name="${user.dispalyName}">${user.dispalyName}</li>`;
+                                   $autocompleteList.append(listItem);
+                               });
+                               $autocompleteList.show();
+                           } else {
+                               $autocompleteList.hide();
+                           }
+                       },
+                       error: function (xhr, status, error) {
+                           console.error('Error:', error);
+                       }
+                   });
+               }, typingDelay);
+           } else {
+               $autocompleteList.hide();
+           }
+       });
+
+       // Hide autocomplete list when clicking outside
+       $(document).on('click', function (e) {
+           if (!$(e.target).closest('#searchBox, #autocompleteList').length) {
+               $autocompleteList.hide();
+           }
+       });
+
+       // Handle click on autocomplete suggestion
+       $autocompleteList.on('click', 'li', function () {
+           const selectedId = $(this).data('id');
+           const selectedName = $(this).data('name');
+
+           // Check for duplicates
+           if ($selectedUsersTable.find(`tr[data-id="${selectedId}"]`).length === 0) {
+               const newRow = `
+                   <tr data-id="${selectedId}">
+                       <td style="border: 1px solid #ccc; padding: 5px;">${selectedName}</td>
+                       <td style="border: 1px solid #ccc; padding: 5px;">
+                           <button class="removeUserBtn" style="cursor: pointer;">Remove</button>
+                       </td>
+                   </tr>`;
+               $selectedUsersTable.append(newRow);
+           }
+
+           $searchBox.val('');
+           $autocompleteList.hide();
+       });
+
+       // Handle remove button click
+       $selectedUsersTable.on('click', '.removeUserBtn', function () {
+           $(this).closest('tr').remove();
+       });
+
+       // Handle Add Users button click
+       $('#addUsersButton').on('click', function () {
+            const MemberIds = [];
+           $selectedUsersTable.find('tr').each(function () {
+                MemberIds.push($(this).data('id'));
+           });
+             const roleId = $(this).data("role-id");
+                
+                 const roleAppId= $(this).data("role-appid");
+            if (MemberIds.length > 0) {
+               $.ajax({
+                    url: '/Role/AssignMember',
+                   type: 'POST',
+                   contentType: 'application/json',
+                      data: JSON.stringify({ MemberIds: MemberIds, roleId:roleId, appId:roleAppId, memeberType:"user" }),
+                   success: function (response) {
+                       alert('Users successfully assigned to the group.');
+                         $('#assignMemberModal').modal('hide'); // For Bootstrap modal
+                   },
+                   error: function (xhr, status, error) {
+                       console.error('Error:', error);
+                       alert('An error occurred while assigning users.');
+                   }
+               });
+           } else {
+               alert('No users selected.');
+           }
+       });
+   });
+</script>

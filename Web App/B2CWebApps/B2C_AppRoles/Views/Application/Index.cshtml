@@ -1,0 +1,25 @@
+﻿@model IEnumerable<B2C_AppRoles.Models.Application>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="display:none;">Id</th>
+               <th style="display:none;">AppId</th>
+                <th>Application Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var app in Model)
+            {
+                <tr>
+                    <td style="display:none;">@app.Id</td>
+                  <td style="display:none;">@app.appId</td>
+                    <td>
+                        <a asp-controller="Role" asp-action="Index" asp-route-Id="@app.Id">
+                            @app.Name
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>

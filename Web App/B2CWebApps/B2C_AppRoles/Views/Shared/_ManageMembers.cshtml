@@ -1,0 +1,157 @@
+﻿@model IEnumerable<Users>
+
+<h4>Members in <span class="text-primary">@ViewBag.groupName</span>  </h4>
+
+<div class="mb-3">
+     <a asp-action="AssignMemberToGroupPartial"
+                                       asp-controller="Group"
+                                       asp-route-groupId="@ViewBag.groupId"
+                                       asp-route-groupName="@ViewBag.groupName"
+                                       class="btn btn-primary"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#assignUsertoGroupModal"
+                                       data-group-id="@ViewBag.groupId"
+                                       data-group-name="@ViewBag.groupName"
+                                       onclick="event.preventDefault(); loadAssignUserPartial(this);">
+                                        Add Users
+                                    </a> 
+@*     <button type="button" class="btn btn-primary me-2" id="addUsers" data-group-id="@ViewBag.groupId" data data-bs-toggle="modal" data-bs-target="#manageMemeberModal">Add Users</button> *@
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                <input type="checkbox" class="form-check-input" style="font-size:15px" id="selectAll" />
+            </th>
+            <th style="display:none;">Id</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Email</th>
+
+            <th>Revoke</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>
+                    <input type="checkbox" class="form-check-input user-checkbox"  value="@user.Id" />
+                </td>
+                <td style="display:none;">@user.Id</td>
+                <td>@user.DispalyName</td>
+                <td>@user.Type</td>
+                <td>@user.Email</td>
+                @* <td><button type="button" class="btn btn-success btn-sm assign-btn" data-user-id="@user.Id">Assign</button></td>   *@
+                <td><button type="button" class="btn btn-danger btn-sm revoke-btn" data-group-id="@ViewBag.groupId" data-user-id="@user.Id">Revoke</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="assignUsertoGroupModal" tabindex="-1" aria-labelledby="assignUsertoGroupLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content"> 
+            <div class="modal-header">
+                <h5 class="modal-title" id="aassignUsertoGroupLabel">Assign User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="assignUsertoGroupBody">
+                @* The partial will be loaded here dynamically via AJAX *@
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+            // Fix for lingering modal backdrop/z-index issues
+            function fixModalBackdrop() {
+            // Remove any lingering modal-backdrop elements
+            $('.modal-backdrop').remove();
+            // Remove 'modal-open' class from body
+            $('body').removeClass('modal-open');
+            // Remove padding-right added by Bootstrap
+            $('body').css('padding-right', '');
+            }
+
+            // Also handle modal hidden event to ensure cleanup
+            $('#assignUsertoGroupModal').on('hidden.bs.modal', function () {
+            fixModalBackdrop();
+            });
+        // Function to update the header checkbox based on individual checkbox selections.
+    function updateSelectAll() {
+        var totalCheckboxes = $('.user-checkbox').length;
+        var checkedCheckboxes = $('.user-checkbox:checked').length;
+        $('#selectAll').prop('checked', totalCheckboxes === checkedCheckboxes);
+    }
+
+    $(document).ready(function(){
+        // Header checkbox: selecting all checkboxes on change.
+         $('#selectAll').on('change', function() {
+             $('.user-checkbox').prop('checked', $(this).prop('checked'));
+         });
+
+         // Individual checkbox change: update the header checkbox.
+         $('.user-checkbox').on('change', updateSelectAll);
+    });
+    
+
+    function loadAssignUserPartial(link) {
+        var url = link.getAttribute('href');
+        var modalBody = document.getElementById('assignUsertoGroupBody');
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            modalBody.innerHTML = html;
+            // Evaluate scripts in the loaded partial
+            var scripts = modalBody.querySelectorAll("script");
+            scripts.forEach(function(script) {
+                var newScript = document.createElement("script");
+                if (script.src) {
+                    newScript.src = script.src;
+                } else {
+                    newScript.text = script.innerText;
+                }
+                document.body.appendChild(newScript);
+                // Optionally remove the script tag after execution
+                // document.body.removeChild(newScript);
+            });
+        });
+
+        var assignUserModal = new bootstrap.Modal(document.getElementById('assignUsertoGroupModal'));
+        assignUserModal.show();
+    }
+       // Revoke button click event
+       $('.revoke-btn').on('click', function() {
+           debugger;
+           var userId = $(this).data('user-id');          
+           var groupId = $(this).data('group-id');
+           var memberIds = [userId];
+
+           $.ajax({
+                url: '/Group/RemoveUserFromGroup',
+                type: 'POST',
+               contentType: 'application/json',
+                  data: JSON.stringify({ MemberIds: memberIds,  groupId: groupId }),
+                success: function(response) {
+                   alert('Successfully revoked');
+                   // Reload the partial view table
+                   location.reload();
+               },
+               error: function(xhr, status, error) {
+                   console.error('Error:', error);
+                   alert('Failed to revoke. Please try again.');
+               }
+           });
+       });
+</script>

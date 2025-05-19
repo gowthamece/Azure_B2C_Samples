@@ -1,3 +1,4 @@
+using ADB2C_AppRoles_Management.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -19,10 +20,9 @@ namespace ADB2C_AppRoles_Management
         }
 
         [Function("ManageB2CAppRoles")]
-        public async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+        public async Task<ActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
         {
-            //_logger.LogInformation("C# HTTP trigger function processed a request.");
-            //return new OkObjectResult("Welcome to Azure Functions!");
+           
             _logger.LogInformation("C# HTTP trigger function processed a request.");
 
             string objectId = req.Query["objectId"]; // User
@@ -66,18 +66,27 @@ namespace ADB2C_AppRoles_Management
                     };
                     var json = JsonConvert.SerializeObject(respContent);
                     _logger.LogInformation(json);
-                    return new HttpResponseMessage(HttpStatusCode.Conflict)
+
+                    //return new HttpResponseMessage(HttpStatusCode.Conflict)
+                    //{
+                    //    Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+                    //};
+                    return (ActionResult)new OkObjectResult(new OutputClaimsModel()
                     {
-                        Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
-                    };
+                        Groups = new List<string>(),
+                        Roles = new List<string>(),
+
+                    });
                 }
             }
 
             //////////////////////////////////////////////////////////////////////////////////////////////////////
             // get the B2C client credentials for this tenant
             //////////////////////////////////////////////////////////////////////////////////////////////////////
-            var b2cClientId = System.Environment.GetEnvironmentVariable($"B2C_{tenantId}_ClientId"); //
-            var b2cClientSecret = System.Environment.GetEnvironmentVariable($"B2C_{tenantId}_ClientSecret");
+            var b2cClientId = System.Environment.GetEnvironmentVariable($"B2C_ClientId"); //
+            var b2cClientSecret = System.Environment.GetEnvironmentVariable($"B2C_ClientSecret");
+
+            _logger.LogInformation($"ClientId={b2cClientId}, ClientSecret= {b2cClientSecret}");
 
             //////////////////////////////////////////////////////////////////////////////////////////////////////
             // Authenticate via the Client Credentials flow
@@ -107,10 +116,16 @@ namespace ADB2C_AppRoles_Management
                     var respContent = new { version = "1.0.0", status = (int)HttpStatusCode.BadRequest, userMessage = "Technical error..." };
                     var json = JsonConvert.SerializeObject(respContent);
                     _logger.LogInformation(json);
-                    return new HttpResponseMessage(HttpStatusCode.Conflict)
+                    //return new HttpResponseMessage(HttpStatusCode.Conflict)
+                    //{
+                    //    Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+                    //};
+                    return (ActionResult)new OkObjectResult(new OutputClaimsModel()
                     {
-                        Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
-                    };
+                        Groups = new List<string>(),
+                        Roles = new List<string>(),
+
+                    });
                 }
                 accessToken = JObject.Parse(contents)["access_token"].ToString();
                 CacheAccessToken(tenantId, accessToken);
@@ -121,6 +136,7 @@ namespace ADB2C_AppRoles_Management
             // GraphAPI query for user's group membership
             //////////////////////////////////////////////////////////////////////////////////////////////////////
             var groupsList = new List<string>();
+            var groupIDList = new List<string>();
             if (scope.Contains("groups"))
             {
                 HttpClient httpClient = new HttpClient();
@@ -136,7 +152,16 @@ namespace ADB2C_AppRoles_Management
                     foreach (JObject g in groupArray)
                     {
                         var name = g["displayName"].Value<string>();
-                        groupsList.Add(name);
+                        var id = g["id"].Value<string>();
+                        if (name != null)
+                        {
+                            groupsList.Add(name??string.Empty);
+                            groupIDList.Add(id);
+                        }
+                        else
+                        {
+                            groupsList.Add("");
+                        }
                     }
                 }
                 httpClient.Dispose();
@@ -168,6 +193,41 @@ namespace ADB2C_AppRoles_Management
                         break;
                     }
                 }
+                _logger.LogInformation($"rolesSection = {userData["value"]}");
+                httpClient.Dispose();
+            }
+            if (groupIDList.Count > 0)
+            {
+                HttpClient httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                foreach(var groupId in groupIDList)
+                {
+                    var url = $"https://graph.microsoft.com/beta/groups/{groupId}/appRoleAssignments?$select=appRoleId,resourceId,resourceDisplayName";
+                    var res = await httpClient.GetAsync(url);
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var respData = await res.Content.ReadAsStringAsync();
+                        _logger.LogInformation(respData);
+                        var groupData= JObject.Parse(respData);                        
+                        // Append groupData to userData
+                        if (userData == null)
+                        {
+                            userData = new JObject();
+                            userData["value"] = new JArray();
+                        }
+                        foreach (var item in groupData["value"])
+                        {
+                            ((JArray)userData["value"]).Add(item);
+                        }
+                        foreach (var item in userData["value"])
+                        {
+                            hasAssignments = true;
+                            break;
+                        }
+                    }
+                    _logger.LogInformation($"Group -{groupId}  = {userData["value"]}");
+                }
+                
                 httpClient.Dispose();
             }
 
@@ -207,12 +267,27 @@ namespace ADB2C_AppRoles_Management
                 httpClient.Dispose();
             }
 
-            var jsonToReturn = JsonConvert.SerializeObject(new { roles = roleNames, groups = groupsList });
-            _logger.LogInformation(jsonToReturn);
-            return new HttpResponseMessage(HttpStatusCode.OK)
+
+            //return new HttpResponseMessage(HttpStatusCode.OK)
+            //{
+            //    Content = new StringContent(jsonToReturn, System.Text.Encoding.UTF8, "application/json")
+            //};
+
+            var jsonToReturn = JsonConvert.SerializeObject((ActionResult)new OkObjectResult(new OutputClaimsModel()
             {
-                Content = new StringContent(jsonToReturn, System.Text.Encoding.UTF8, "application/json")
-            };
+                Groups = groupsList,
+                Roles = roleNames.Distinct().ToList()
+
+            }));
+            _logger.LogInformation(jsonToReturn);
+            return (ActionResult)new OkObjectResult(new OutputClaimsModel()
+            {
+                Groups  = groupsList,
+                Roles   = roleNames.Distinct().ToList()
+
+            });
+         //   var jsonToReturn = JsonConvert.SerializeObject(new { roles = roleNames, groups = groupsList });
+          
         }
 
         public static string GetCachedAccessToken(string tenantId, int secondsRemaining = 60) // access_token needs to be valid for N seconds more

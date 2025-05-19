@@ -1,0 +1,113 @@
+﻿@model IEnumerable<Users>
+<div class="mb-3">
+    <button type="button" class="btn btn-primary me-2" id="addUsers" data-role-id="@ViewBag.RoleId" data-role-appId="@ViewBag.AppId" data-bs-toggle="modal" data-bs-target="#manageUsersModal">Add Users</button>
+    <button type="button" class="btn btn-primary" id="addGroups" data-role-id="@ViewBag.RoleId" data-role-appId="@ViewBag.AppId" data-bs-toggle="modal" data-bs-target="#manageGroupsModal">Add Groups</button>
+</div>
+
+<table class="table">  
+   <thead>  
+       <tr>  
+           <th>
+                <input type="checkbox" class="form-check-input" style="font-size:15px" id="selectAll" />
+            </th>
+        <th style="display:none;">Id</th>
+        <th>Name</th>  
+        <th>Type</th>
+        <th>Email</th>
+         
+           <th>Revoke</th>  
+       </tr>  
+   </thead>  
+   <tbody>  
+       @foreach (var user in Model)  
+       {  
+           <tr>  
+               <td>
+                    <input type="checkbox" class="form-check-input user-checkbox" value="@user.Id" />
+                </td>
+            <td style="display:none;">@user.Id</td>
+            <td>@user.DispalyName</td>  
+            <td>@user.Type</td>
+            <td>@user.Email</td>
+                <td><button type="button" class="btn btn-danger btn-sm revoke-btn" data-member-type="@user.Type" data-user-id="@user.Id">Revoke</button></td>
+            </tr>  
+       }  
+   </tbody>  
+</table>  
+
+<!-- Modal -->
+<div class="modal fade" id="manageUsersModal" tabindex="-1" aria-labelledby="manageUsersModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manageUsersModalLabel">Add Users</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @await Html.PartialAsync("_ManageUsers")
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="manageGroupsModal" tabindex="-1" aria-labelledby="manageGroupsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manageGroupsModalLabel">Add Groups</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @await Html.PartialAsync("_ManageGroup")
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">  
+   // Function to update the header checkbox based on individual checkbox selections.
+   function updateSelectAll() {
+       var totalCheckboxes = $('.user-checkbox').length;
+       var checkedCheckboxes = $('.user-checkbox:checked').length;
+       $('#selectAll').prop('checked', totalCheckboxes === checkedCheckboxes);
+   }
+
+   $(document).ready(function() {  
+       // Header checkbox: selecting all checkboxes on change.
+       $('#selectAll').on('change', function() {  
+           $('.user-checkbox').prop('checked', $(this).prop('checked'));  
+       });
+
+       // Individual checkbox change: update the header checkbox.
+       $('.user-checkbox').on('change', updateSelectAll);
+
+       // Revoke button click event  
+       $('.revoke-btn').on('click', function() {             
+           var userId = $(this).data('user-id');
+           var type = $(this).data('member-type');
+           var roleId = $('#addUsers').data('role-id');  
+           var roleAppId = $('#addUsers').data('role-appid');  
+           var memberIds = [userId];  
+             
+           $.ajax({
+                url: '/Role/RevokeMember',
+                type: 'POST',  
+                contentType: 'application/json',
+                data: JSON.stringify({ MemberIds: memberIds, roleId: roleId, appId: roleAppId, memeberType: type }),
+                success: function(response) {  
+                   alert('Successfully revoked');  
+                   // Reload the partial view table  
+                   location.reload();  
+               },  
+               error: function(xhr, status, error) {  
+                   console.error('Error:', error);  
+                   alert('Failed to revoke. Please try again.');  
+               }  
+           });  
+       });  
+   });  
+</script>

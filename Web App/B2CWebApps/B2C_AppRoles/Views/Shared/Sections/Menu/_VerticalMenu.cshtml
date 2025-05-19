@@ -1,0 +1,121 @@
+﻿@{
+    TempData.Keep();
+    string? currentPage = ViewContext.HttpContext.Request.Path;
+}
+
+<!-- Menu -->
+@* ! Do this simple *@
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+
+    @* ! Hide app brand if navbar-full *@
+    <div class='app-brand demo @((@ViewData["navbarFull"] != null && Convert.ToBoolean(@ViewData["navbarFull"])) ? "d-xl-none" : "")'>
+        <a asp-controller="Dashboards" asp-action="Index" class="app-brand-link">
+            <span class="app-brand-logo demo me-1">  @await Html.PartialAsync("../_Partials/_Macros")</span>
+            <span class="app-brand-text demo menu-text fw-semibold ms-2">@TempData.Peek("appName")</span>
+        </a>
+
+        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="mdi menu-toggle-icon d-xl-block align-middle mdi-20px"></i>
+        </a>
+    </div>
+
+    <div class="menu-inner-shadow"></div>
+
+    @* ! Full version menu-items *@
+    <ul class="menu-inner py-1">
+        <!-- Dashboards -->
+        <li class='menu-item@(currentPage.EndsWith("/") || currentPage.StartsWith("/Dashboards") ? " active open" : "")'>
+            <a href="javascript:void(0);" class="menu-link">
+                <i class="menu-icon tf-icons mdi mdi-home-outline"></i>
+                <div>Dashboards</div>
+       @*          <div class="badge bg-danger rounded-pill ms-auto">5</div> *@
+            </a>
+            @* <ul class="menu-sub">
+                <li class='menu-item@(currentPage == "/Dashboards/CRM" ? " active" : "")'>
+                    <a href="https://demos.themeselection.com/materio-aspnet-core-mvc-admin-template/html/vertical-menu-template/dashboards-crm.html" target="_blank" class="menu-link">
+                        <div>CRM</div><div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
+                    </a>
+                </li>
+                <li class='menu-item@(currentPage == "/" ? " active" : "")'>
+                    <a asp-controller="Dashboards" asp-action="Index" class="menu-link">
+                        <div>Analytics</div>
+                    </a>
+                </li>
+                <li class='menu-item@(currentPage == "/Ecommerce/Dashboard" ? " active" : "")'>
+                    <a href="https://demos.themeselection.com/materio-aspnet-core-mvc-admin-template/html/vertical-menu-template/app-ecommerce-dashboard.html" target="_blank" class="menu-link">
+                        <div>eCommerce</div><div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
+                    </a>
+                </li>
+                <li class='menu-item@(currentPage == "/Logistics/Dashboard" ? " active" : "")'>
+                    <a href="https://demos.themeselection.com/materio-aspnet-core-mvc-admin-template/html/vertical-menu-template/app-logistics-dashboard.html" target="_blank" class="menu-link">
+                        <div>Logistics</div><div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
+                    </a>
+                </li>
+                <li class='menu-item@(currentPage == "/Academy/Dashboard" ? " active" : "")'>
+                    <a href="https://demos.themeselection.com/materio-aspnet-core-mvc-admin-template/html/vertical-menu-template/app-academy-dashboard.html" target="_blank" class="menu-link">
+                        <div>Academy</div><div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
+                    </a>
+                </li>
+            </ul> *@
+        </li>
+
+        <!-- Layouts -->
+        <li class='menu-item@(currentPage.StartsWith("/LayoutExamples") ? " active open" : "")'>
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons mdi mdi-window-maximize"></i>
+                <div>Applications</div>
+            </a>
+
+            <ul class="menu-sub">
+                <li class='menu-item@(currentPage == "/application" ? " active" : "")'>
+                    <a asp-controller="application" asp-action="Index" class="menu-link">
+                        <div>All Applications</div>
+                    </a>
+                </li>
+
+              @*   <li class='menu-item@(currentPage == "/LayoutExamples/WithoutMenu" ? " active" : "")'>
+                    <a asp-controller="LayoutExamples" asp-action="WithoutMenu" class="menu-link">
+                        <div>Application Request</div>
+                    </a>
+                </li>
+                <li class='menu-item@(currentPage == "/LayoutExamples/WithoutNavbar" ? " active" : "")'>
+                    <a asp-controller="LayoutExamples" asp-action="WithoutNavbar" class="menu-link">
+                        <div>Your Application</div>
+                    </a>
+                </li> *@
+            </ul>
+        </li>
+
+   
+
+        <!-- Apps -->
+      
+        <!-- Pages -->
+        <li class='menu-item@(currentPage.StartsWith("/Group") ? " active open" : "")'>
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons mdi mdi-account-outline"></i>
+                <div>Groups</div>
+            </a>
+            <ul class="menu-sub">
+                <li class='menu-item@(currentPage == "/Group/Index" ? " active" : "")'>
+                    <a asp-controller="Group" asp-action="Index" class="menu-link">
+                        <div>Groups I Own</div>
+                    </a>
+                </li>
+                <li class='menu-item@(currentPage == "/Pages/AccountSettingsNotifications" ? " active" : "")'>
+                    <a asp-controller="Pages" asp-action="AccountSettingsNotifications" class="menu-link">
+                        <div>Notifications</div>
+                    </a>
+                </li>
+                <li class='menu-item@(currentPage == "/Pages/AccountSettingsConnections" ? " active" : "")'>
+                    <a asp-controller="Pages" asp-action="AccountSettingsConnections" class="menu-link">
+                        <div>Connections</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
+       
+    </ul>
+
+</aside>
+<!-- / Menu -->
