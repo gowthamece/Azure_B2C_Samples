@@ -39,3 +39,7 @@
 /Web App/B2CWebApps/B2C_AppRoleAssignment/bin/Debug/net8.0
 /Web App/B2CWebApps/B2C_AppRoleAssignment/obj
 /Web App/B2CWebApps/B2C_AppRoles/bin
+/Web App/B2CWebApps/B2C_AppRoles/obj
+/Web App/B2CWebApps/B2C_AppRoles/Properties/PublishProfiles
+/Web App/B2CWebApps/B2C_AppRoles/Properties/ServiceDependencies/b2crole - Web Deploy2
+/Web App/B2CWebApps/B2C_AppRoles/Properties/ServiceDependencies/b2crole - Zip Deploy2/profile.arm.json
