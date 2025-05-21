@@ -15,20 +15,12 @@ namespace B2C_AppRoles.MSGraphServices
     public class MSGraphApiServices : IMSGraphApiServices
     {
         private static readonly string GraphApiUrl = "https://graph.microsoft.com/v1.0/";
-        private static readonly string Scope = "https://graph.microsoft.com/.default";
-        private readonly AzureAdOptions _azureAdOptions;
-        private readonly string _clientId;
-        private readonly string _clientSecret;
-        private readonly string _tenantId;
+        private static readonly string Scope = "https://graph.microsoft.com/.default";        
         private readonly IConfiguration _configuration;
 
         public MSGraphApiServices(IOptions<AzureAdOptions> azureAdOptions, IConfiguration configuration)
         {
-            _configuration = configuration;
-            _azureAdOptions = azureAdOptions.Value;
-            _clientId = _azureAdOptions.ClientId;
-            _clientSecret = _azureAdOptions.ClientSecret;
-            _tenantId = _azureAdOptions.TenantId;
+            _configuration = configuration;            
         }
 
         public async Task<IActionResult> GetApplicationOwnerAuthorizationAsync(string email, string appId)
