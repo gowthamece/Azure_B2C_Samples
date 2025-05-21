@@ -1,9 +1,12 @@
+using Azure.Identity;
 using B2C_AppRoles.Models;
 using B2C_AppRoles.MSGraphServices;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
+using Azure.Security.KeyVault;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +14,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+
+if (builder.Environment.IsProduction() || builder.Environment.IsStaging())
+{
+    Uri kvUri = new(builder.Configuration["AzureEndPoints:keyVaultName"] ?? "https://kv-entraid-dev-eastus-01.vault.azure.net/");
+    var options = new DefaultAzureCredentialOptions
+    {
+        ExcludeEnvironmentCredential = false
+    };
+    builder.Configuration.AddAzureKeyVault(kvUri, new DefaultAzureCredential());
+}
 
 builder.Services.AddAuthorization(options =>
 {
