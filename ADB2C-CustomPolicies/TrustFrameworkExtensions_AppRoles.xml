@@ -81,7 +81,7 @@
           <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
           <Metadata>
             <!-- TODO: change this -->
-            <Item Key="ServiceUrl">https://[your_azure_function_name]">.azurewebsites.net/api/ManageB2CAppRoles</Item>
+            <Item Key="ServiceUrl">https://[your_azure_function_name].azurewebsites.net/api/ManageB2CAppRoles</Item>
             <Item Key="AuthenticationType">None</Item>
             <Item Key="SendClaimsIn">Body</Item>
             <Item Key="AllowInsecureAuthInProduction">true</Item>
