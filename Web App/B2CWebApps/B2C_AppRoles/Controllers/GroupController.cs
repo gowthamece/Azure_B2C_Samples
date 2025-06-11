@@ -23,7 +23,17 @@ namespace B2C_AppRoles.Controllers
             var groupResult = await _msGraphApiServices.GetGroupsOwnedByUserAsync(userId);
             return View(groupResult);
         }
-
+        public async Task<IActionResult> Get()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier");
+            if (userIdClaim == null || string.IsNullOrEmpty(userIdClaim.Value))
+            {
+                return BadRequest("User identifier claim not found.");
+            }
+            var userId = userIdClaim.Value;
+            var groupResult = await _msGraphApiServices.GetGroupsOwnedByUserAsync(userId);
+            return Ok(groupResult.Count);
+        }
         [HttpGet]
         public async Task<IActionResult> AssignMemberToGroupPartial(string groupId, string groupName)
         {

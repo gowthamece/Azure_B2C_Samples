@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace B2C_AppRoles.Controllers
 {
@@ -18,9 +19,30 @@ namespace B2C_AppRoles.Controllers
             _logger = logger;
             _msGraphApiServices = msGraphApiServices;
         }
-
-        public IActionResult Index()
+        [Authorize]
+        public async Task<IActionResult> Index()
         {
+            // Get user object id claim
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                ViewData["GroupCount"] = 0;
+                ViewData["Assigned Role"] = 0;
+                return View();
+            }
+
+            // Get group count (groups the user is a member of)
+            var groupCountTask = await _msGraphApiServices.GetGroupsOwnedByUserAsync(userId);
+            // Get assigned roles count (roles assigned to the user)
+            var applicationTask = await _msGraphApiServices.GetApplicationsAsync();
+
+            //Task.WaitAll(groupCountTask, assignedRolesTask);
+
+            var groupCount = groupCountTask?.Count ?? 0;
+            var applicationCount = applicationTask?.Count ?? 0;
+
+            ViewData["GroupCount"] = groupCount;
+            ViewData["AppCount"] = applicationCount;
             return View();
         }
 

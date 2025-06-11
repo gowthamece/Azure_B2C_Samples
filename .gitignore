@@ -54,3 +54,5 @@
 /Web App/B2CWebApps/WeatherAppMVC/obj/Debug/net8.0/WeatherAppMVC.assets.cache
 /Web App/B2CWebApps/WeatherAppMVC/obj/Debug/net8.0/WeatherAppMVC.csproj.AssemblyReference.cache
 /Web App/B2CWebApps/WeatherAppMVC/obj/Debug/net8.0/WeatherAppMVC.GeneratedMSBuildEditorConfig.editorconfig
+/Azure Functions/AspnetCoreMsal-AppRole/Properties
+/Web App/B2CWebApps/B2C_AppRoles/Properties/ServiceDependencies/b2capproles - Zip Deploy/profile.arm.json

@@ -11,6 +11,6 @@
     <WebStackScaffolding_IsPartialViewSelected>True</WebStackScaffolding_IsPartialViewSelected>
     <WebStackScaffolding_IsReferencingScriptLibrariesSelected>False</WebStackScaffolding_IsReferencingScriptLibrariesSelected>
     <WebStackScaffolding_LayoutPageFile />
-    <NameOfLastUsedPublishProfile>C:\Users\KumarG01\source\repos\GitHub\AzureADB2C-Samples\Web App\B2CWebApps\B2C_AppRoles\Properties\PublishProfiles\b2crole - Web Deploy2.pubxml</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>C:\Users\gowth\source\repos\GitHub\Azure AD B2C\Web App\B2CWebApps\B2C_AppRoles\Properties\PublishProfiles\b2capproles - Zip Deploy.pubxml</NameOfLastUsedPublishProfile>
   </PropertyGroup>
 </Project>
