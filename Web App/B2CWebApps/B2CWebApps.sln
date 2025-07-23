@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "B2C_AppRoles", "B2C_AppRole
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "B2C_AppRoleAssignment", "B2C_AppRoleAssignment\B2C_AppRoleAssignment.csproj", "{CD7820A8-52E9-4BC0-90E0-DBC903EE2B5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorFluentUI", "BlazorFluentUI\BlazorFluentUI.csproj", "{B7AF8EEF-FEA2-4AA8-8FE5-2584A5CFBF57}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{CD7820A8-52E9-4BC0-90E0-DBC903EE2B5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD7820A8-52E9-4BC0-90E0-DBC903EE2B5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD7820A8-52E9-4BC0-90E0-DBC903EE2B5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7AF8EEF-FEA2-4AA8-8FE5-2584A5CFBF57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7AF8EEF-FEA2-4AA8-8FE5-2584A5CFBF57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7AF8EEF-FEA2-4AA8-8FE5-2584A5CFBF57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7AF8EEF-FEA2-4AA8-8FE5-2584A5CFBF57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
