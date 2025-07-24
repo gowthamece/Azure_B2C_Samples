@@ -1,7 +1,103 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@attribute [Authorize]
+@rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Azure B2C App Roles Management</PageTitle>
 
-<h1>Hello, world!</h1>
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentCard>
+        <FluentLabel Typo="Typography.H1">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Shield())" Color="Color.Accent" />
+            Azure B2C App Roles Management
+        </FluentLabel>
+        <FluentDivider></FluentDivider>
+        <FluentText Typo="Typography.Body">
+            Manage Azure B2C application roles, users, and group assignments.
+        </FluentText>
+    </FluentCard>
 
-Welcome to your new app.
+    <FluentGrid>
+        <FluentGridItem xs="12" sm="6" md="4">
+            <FluentCard>
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+                    <FluentIcon Value="@(new Icons.Regular.Size32.Apps())" Color="Color.Accent" />
+                    <FluentLabel Typo="Typography.H3">Applications</FluentLabel>
+                    <FluentText Typo="Typography.Body">
+                        View and manage Azure AD applications and their roles.
+                    </FluentText>
+                    <FluentButton Appearance="Appearance.Accent" 
+                                  OnClick="@(() => Navigation.NavigateTo("/applications"))">
+                        View Applications
+                    </FluentButton>
+                </FluentStack>
+            </FluentCard>
+        </FluentGridItem>
+
+        <FluentGridItem xs="12" sm="6" md="4">
+            <FluentCard>
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+                    <FluentIcon Value="@(new Icons.Regular.Size32.Person())" Color="Color.Accent" />
+                    <FluentLabel Typo="Typography.H3">Users</FluentLabel>
+                    <FluentText Typo="Typography.Body">
+                        Manage users and their role assignments.
+                    </FluentText>
+                    <FluentButton Appearance="Appearance.Accent" 
+                                  OnClick="@(() => Navigation.NavigateTo("/users"))">
+                        View Users
+                    </FluentButton>
+                </FluentStack>
+            </FluentCard>
+        </FluentGridItem>
+
+        <FluentGridItem xs="12" sm="6" md="4">
+            <FluentCard>
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+                    <FluentIcon Value="@(new Icons.Regular.Size32.PeopleTeam())" Color="Color.Accent" />
+                    <FluentLabel Typo="Typography.H3">Groups</FluentLabel>
+                    <FluentText Typo="Typography.Body">
+                        Manage Azure AD groups and memberships.
+                    </FluentText>
+                    <FluentButton Appearance="Appearance.Accent" 
+                                  OnClick="@(() => Navigation.NavigateTo("/groups"))">
+                        View Groups
+                    </FluentButton>
+                </FluentStack>
+            </FluentCard>
+        </FluentGridItem>
+    </FluentGrid>
+
+    @if (IsTeamManager)
+    {
+        <FluentCard>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+                <FluentLabel Typo="Typography.H4">
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Crown())" Color="Color.Warning" />
+                    Team Manager Access
+                </FluentLabel>
+                <FluentText Typo="Typography.Body">
+                    You have team manager privileges and can access advanced management features.
+                </FluentText>
+            </FluentStack>
+        </FluentCard>
+    }
+</FluentStack>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private bool IsTeamManager => User?.HasClaim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", "TeamManager") ?? false;
+
+    private ClaimsPrincipal? User { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState != null)
+        {
+            var authState = await AuthenticationState;
+            User = authState.User;
+        }
+    }
+}

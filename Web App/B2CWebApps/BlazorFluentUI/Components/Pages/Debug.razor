@@ -1,0 +1,102 @@
+@page "/debug"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+<PageTitle>Debug - User Claims</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentCard>
+        <FluentLabel Typo="Typography.H2">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Bug())" Color="Color.Accent" />
+            Debug - User Claims
+        </FluentLabel>
+        <FluentDivider></FluentDivider>
+        <FluentText Typo="Typography.Body">
+            This page shows all available user claims for debugging purposes.
+        </FluentText>
+    </FluentCard>
+
+    @if (User != null)
+    {
+        <FluentCard>
+            <FluentLabel Typo="Typography.H3">User Identity Information</FluentLabel>
+            <FluentDivider></FluentDivider>
+            
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+                <FluentText><strong>Is Authenticated:</strong> @User.Identity?.IsAuthenticated</FluentText>
+                <FluentText><strong>Authentication Type:</strong> @User.Identity?.AuthenticationType</FluentText>
+                <FluentText><strong>Name:</strong> @User.Identity?.Name</FluentText>
+                <FluentText><strong>User ID (GetUserId()):</strong> @GetUserId()</FluentText>
+            </FluentStack>
+        </FluentCard>
+
+        <FluentCard>
+            <FluentLabel Typo="Typography.H3">All Claims (@User.Claims.Count() total)</FluentLabel>
+            <FluentDivider></FluentDivider>
+            
+            @if (User.Claims.Any())
+            {
+                <FluentDataGrid Items="@User.Claims.AsQueryable()" TGridItem="Claim">
+                    <PropertyColumn Property="@(c => c.Type)" Sortable="true" Title="Claim Type" />
+                    <PropertyColumn Property="@(c => c.Value)" Title="Claim Value" />
+                    <PropertyColumn Property="@(c => c.ValueType)" Title="Value Type" />
+                </FluentDataGrid>
+            }
+            else
+            {
+                <FluentText>No claims found.</FluentText>
+            }
+        </FluentCard>
+
+        <FluentCard>
+            <FluentLabel Typo="Typography.H3">Common User ID Claims</FluentLabel>
+            <FluentDivider></FluentDivider>
+            
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                <FluentText><strong>objectidentifier:</strong> @(User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value ?? "Not found")</FluentText>
+                <FluentText><strong>oid:</strong> @(User.FindFirst("oid")?.Value ?? "Not found")</FluentText>
+                <FluentText><strong>sub:</strong> @(User.FindFirst("sub")?.Value ?? "Not found")</FluentText>
+                <FluentText><strong>nameidentifier (xmlsoap):</strong> @(User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value ?? "Not found")</FluentText>
+                <FluentText><strong>NameIdentifier (ClaimTypes):</strong> @(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Not found")</FluentText>
+            </FluentStack>
+        </FluentCard>
+    }
+    else
+    {
+        <FluentMessageBar Intent="MessageIntent.Warning">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Warning())" />
+            User context is null. This shouldn't happen on an authenticated page.
+        </FluentMessageBar>
+    }
+</FluentStack>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+    
+    private ClaimsPrincipal? User { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState != null)
+        {
+            var authState = await AuthenticationState;
+            User = authState.User;
+        }
+    }
+
+    private string? GetUserId()
+    {
+        if (User == null) return null;
+
+        // Try different claim types that Azure AD B2C might use
+        var userId = User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value
+                  ?? User.FindFirst("oid")?.Value
+                  ?? User.FindFirst("sub")?.Value
+                  ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
+                  ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        return userId;
+    }
+}

@@ -1,0 +1,208 @@
+@page "/applications"
+@using BlazorFluentUI.Models
+@using BlazorFluentUI.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@attribute [Authorize]
+@inject IMSGraphApiServices MSGraphService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<style>
+    .fluent-data-grid-cell {
+        padding: 8px 4px !important;
+        vertical-align: middle !important;
+    }
+    
+    .action-stack {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 40px !important;
+    }
+    
+    .action-button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        min-width: fit-content !important;
+        white-space: nowrap !important;
+    }
+
+    /* Mobile responsiveness */
+    @@media (max-width: 768px) {
+        .action-button span {
+            display: none !important;
+        }
+        
+        .action-button {
+            min-width: 32px !important;
+            padding: 4px !important;
+        }
+    }
+</style>
+
+<PageTitle>Applications - Azure B2C App Roles</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentCard>
+        <FluentLabel Typo="Typography.H2">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Apps())" Color="Color.Accent" />
+            Applications
+        </FluentLabel>
+        <FluentDivider></FluentDivider>
+        <FluentText Typo="Typography.Body">
+            Manage Azure AD applications and their roles.
+        </FluentText>
+    </FluentCard>
+
+    @if (IsLoading)
+    {
+        <FluentProgressRing />
+        <FluentText>Loading applications...</FluentText>
+    }
+    else if (ApplicationsList.Any())
+    {
+        <FluentDataGrid Items="@ApplicationsList.AsQueryable()" GridTemplateColumns="1fr 2fr 1fr" TGridItem="Application">
+            <PropertyColumn Property="@(c => c.Name)" Sortable="true" Title="Application Name" />
+            <PropertyColumn Property="@(c => c.appId)" Sortable="true" Title="Application ID" />
+            <TemplateColumn Title="Actions" Align="Align.Center">
+                <div class="action-stack">
+                    <FluentButton Appearance="Appearance.Accent" 
+                                  Size="Size.Small"
+                                  OnClick="@(() => ViewRoles(context.Id, context.appId))"
+                                  Class="action-button">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Shield())" Color="Color.Neutral" />
+                        <span>View Roles</span>
+                    </FluentButton>
+                </div>
+            </TemplateColumn>
+        </FluentDataGrid>
+    }
+    else
+    {
+        <FluentMessageBar Intent="MessageIntent.Info">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Info())" />
+            No applications found.
+        </FluentMessageBar>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <FluentMessageBar Intent="MessageIntent.Error">
+            <FluentIcon Value="@(new Icons.Regular.Size20.ErrorCircle())" />
+            @ErrorMessage
+        </FluentMessageBar>
+    }
+</FluentStack>
+
+@code {
+    private List<Application> ApplicationsList = new();
+    private bool IsLoading = true;
+    private string ErrorMessage = string.Empty;
+    private ClaimsPrincipal? User { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get authentication state using the injected provider
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            User = authState.User;
+            
+            // Debug: Log authentication info
+            Console.WriteLine($"User authenticated: {User?.Identity?.IsAuthenticated}");
+            Console.WriteLine($"User name: {User?.Identity?.Name}");
+            Console.WriteLine($"Claims count: {User?.Claims?.Count()}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting authentication state: {ex.Message}");
+        }
+
+        await LoadApplications();
+    }
+
+    private async Task LoadApplications()
+    {
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+
+            ApplicationsList = await MSGraphService.GetApplicationsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading applications: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ViewRoles(string applicationId, string appId)
+    {
+        try
+        {
+            // Get current user context if not available
+            if (User == null)
+            {
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                User = authState.User;
+            }
+
+            // Try multiple claim types to get user ID
+            var userId = GetUserId();
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var hasAccess = await MSGraphService.GetApplicationOwnerAuthorizationAsync(userId, applicationId);
+                if (!hasAccess)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "You don't have permission to access this application.");
+                    return;
+                }
+            }
+
+            Navigation.NavigateTo($"/roles/{applicationId}");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error checking application access: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private string? GetUserId()
+    {
+        if (User == null) return null;
+
+        // Try different claim types that Azure AD B2C might use
+        var userId = User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value
+                  ?? User.FindFirst("oid")?.Value
+                  ?? User.FindFirst("sub")?.Value
+                  ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
+                  ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        // Debug: Log available claims if userId is still null
+        if (string.IsNullOrEmpty(userId))
+        {
+            Console.WriteLine("Available claims:");
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"Type: {claim.Type}, Value: {claim.Value}");
+            }
+        }
+
+        return userId;
+    }
+}

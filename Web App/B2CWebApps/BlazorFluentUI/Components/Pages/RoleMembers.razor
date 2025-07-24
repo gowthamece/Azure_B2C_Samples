@@ -1,0 +1,177 @@
+@page "/role-members/{ApplicationId}/{RoleId}"
+@using Models = BlazorFluentUI.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IMSGraphApiServices MSGraphService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<style>
+    .fluent-data-grid-cell {
+        padding: 8px 4px !important;
+        vertical-align: middle !important;
+    }
+    
+    .action-stack {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 40px !important;
+    }
+    
+    .action-button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        min-width: fit-content !important;
+        white-space: nowrap !important;
+    }
+
+    /* Mobile responsiveness */
+    @@media (max-width: 768px) {
+        .action-button span {
+            display: none !important;
+        }
+        
+        .action-button {
+            min-width: 32px !important;
+            padding: 4px !important;
+        }
+    }
+</style>
+
+<PageTitle>Role Members - Azure B2C App Roles</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentCard>
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10" VerticalAlignment="VerticalAlignment.Center">
+            <FluentButton Appearance="Appearance.Neutral" 
+                          Size="Size.Small"
+                          OnClick="@(() => Navigation.NavigateTo($"/roles/{ApplicationId}"))">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowLeft())" />
+                Back to Roles
+            </FluentButton>
+            <FluentLabel Typo="Typography.H2">
+                <FluentIcon Value="@(new Icons.Regular.Size24.People())" Color="Color.Accent" />
+                Role Members
+            </FluentLabel>
+        </FluentStack>
+        <FluentDivider></FluentDivider>
+        <FluentText Typo="Typography.Body">
+            Members assigned to role: @RoleName
+        </FluentText>
+    </FluentCard>
+
+    @if (IsLoading)
+    {
+        <FluentProgressRing />
+        <FluentText>Loading role members...</FluentText>
+    }
+    else if (RoleMembersList.Any())
+    {
+        <FluentDataGrid Items="@RoleMembersList.AsQueryable()" GridTemplateColumns="2fr 2fr 1fr 1fr" TGridItem="Models.Users">
+            <PropertyColumn Property="@(c => c.DispalyName)" Sortable="true" Title="Display Name" />
+            <PropertyColumn Property="@(c => c.Email)" Title="Email" />
+            <PropertyColumn Property="@(c => c.Type)" Title="Type" />
+            <TemplateColumn Title="Actions" Align="Align.Center">
+                <div class="action-stack">
+                    <FluentButton Appearance="Appearance.Outline" 
+                                  Size="Size.Small"
+                                  OnClick="@(() => RevokeMember(context))"
+                                  Class="action-button">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.PersonDelete())" />
+                        <span>Revoke</span>
+                    </FluentButton>
+                </div>
+            </TemplateColumn>
+        </FluentDataGrid>
+    }
+    else
+    {
+        <FluentMessageBar Intent="MessageIntent.Info">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Info())" />
+            No members assigned to this role.
+        </FluentMessageBar>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <FluentMessageBar Intent="MessageIntent.Error">
+            <FluentIcon Value="@(new Icons.Regular.Size20.ErrorCircle())" />
+            @ErrorMessage
+        </FluentMessageBar>
+    }
+</FluentStack>
+
+@code {
+    [Parameter] public string ApplicationId { get; set; } = string.Empty;
+    [Parameter] public string RoleId { get; set; } = string.Empty;
+    [Parameter, SupplyParameterFromQuery] public string? RoleName { get; set; }
+    [Parameter, SupplyParameterFromQuery] public string? AppId { get; set; }
+
+    private List<Models.Users> RoleMembersList = new();
+    private bool IsLoading = true;
+    private string ErrorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRoleMembers();
+    }
+
+    private async Task LoadRoleMembers()
+    {
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+
+            if (!string.IsNullOrEmpty(AppId))
+            {
+                RoleMembersList = await MSGraphService.GetUserByAppRoleId(RoleId, AppId);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading role members: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RevokeMember(Models.Users member)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(AppId))
+            {
+                ErrorMessage = "Application ID is missing.";
+                return;
+            }
+
+            var success = await MSGraphService.RevokeMemberFromAppRole(member.Id, AppId, RoleId, member.Type.ToLower());
+            
+            if (success)
+            {
+                RoleMembersList.Remove(member);
+                await JSRuntime.InvokeVoidAsync("alert", "Member revoked successfully!");
+                StateHasChanged();
+            }
+            else
+            {
+                ErrorMessage = "Failed to revoke member from role.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error revoking member: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+}

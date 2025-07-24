@@ -1,0 +1,451 @@
+@page "/roles/{ApplicationId}"
+@using BlazorFluentUI.Models
+@using BlazorFluentUI.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@attribute [Authorize]
+@inject IMSGraphApiServices MSGraphService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<PageTitle>App Roles - Azure B2C App Roles</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentCard>
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10" VerticalAlignment="VerticalAlignment.Center">
+            <FluentButton Appearance="Appearance.Neutral" 
+                          Size="Size.Small"
+                          OnClick="@(() => Navigation.NavigateTo("/applications"))">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowLeft())" />
+                Back to Applications
+            </FluentButton>
+            <FluentLabel Typo="Typography.H2">
+                <FluentIcon Value="@(new Icons.Regular.Size24.Shield())" Color="Color.Accent" />
+                Application Roles
+            </FluentLabel>
+        </FluentStack>
+        <FluentDivider></FluentDivider>
+        <FluentText Typo="Typography.Body">
+            Manage roles for Application ID: @ApplicationId
+        </FluentText>
+    </FluentCard>
+
+    @if (IsUnauthorized)
+    {
+        <FluentMessageBar Intent="MessageIntent.Warning">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Warning())" />
+            You don't have permission to access this application.
+        </FluentMessageBar>
+    }
+    else
+    {
+        <FluentCard>
+            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10" VerticalAlignment="VerticalAlignment.Center">
+                <FluentLabel Typo="Typography.H4">Create New Role</FluentLabel>
+                <FluentButton Appearance="Appearance.Accent" 
+                              Size="Size.Small"
+                              OnClick="@(() => HideCreateRoleDialog = false)">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Add())" />
+                    Add Role
+                </FluentButton>
+            </FluentStack>
+        </FluentCard>
+
+        @if (IsLoading)
+        {
+            <FluentProgressRing />
+            <FluentText>Loading roles...</FluentText>
+        }
+        else if (AppRoles.Any())
+        {
+            <FluentDataGrid Items="@AppRoles.AsQueryable()" GridTemplateColumns="2fr 1fr 1fr" TGridItem="AppRole">
+                <PropertyColumn Property="@(c => c.Name)" Sortable="true" Title="Role Name" />
+                <PropertyColumn Property="@(c => c.Id)" Title="Role ID" />
+                <TemplateColumn Title="Actions" >
+                     <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5" VerticalAlignment="VerticalAlignment.Center">
+                        <FluentButton Appearance="Appearance.Accent"                                       
+                                      OnClick="@(() => ViewRoleMembers(context.Id, context.Name, context.AppId))"
+                                      Style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                          <FluentIcon Value="@(new Icons.Regular.Size20.People())" Color="Color.Lightweight" />
+                            Members
+                        </FluentButton>
+                        <FluentButton Appearance="Appearance.Neutral"                                       
+                                      OnClick="@(() => ShowAssignMemberDialog(context.Id, context.Name, context.AppId))"
+                                      Style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <FluentIcon Value="@(new Icons.Regular.Size20.PersonAdd())" />
+                            <span>Assign</span>
+                        </FluentButton>
+                     </FluentStack> 
+                </TemplateColumn>
+            </FluentDataGrid>
+        }
+        else
+        {
+            <FluentMessageBar Intent="MessageIntent.Info">
+                <FluentIcon Value="@(new Icons.Regular.Size20.Info())" />
+                No roles found for this application.
+            </FluentMessageBar>
+        }
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <FluentMessageBar Intent="MessageIntent.Error">
+            <FluentIcon Value="@(new Icons.Regular.Size20.ErrorCircle())" />
+            @ErrorMessage
+        </FluentMessageBar>
+    }
+</FluentStack>
+
+<!-- Create Role Dialog -->
+<FluentDialog @bind-Hidden="HideCreateRoleDialog" Modal="true" TrapFocus="true" AriaLabel="Create new role">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Shield())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                Create New Role
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="15">
+            <FluentTextField @bind-Value="NewRole.RoleName" 
+                             Placeholder="Enter role name"
+                             Label="Role Name"
+                             Required="true" />
+            <FluentTextArea @bind-Value="NewRole.RoleDescription" 
+                            Placeholder="Enter role description"
+                            Label="Role Description"
+                            Rows="3" />
+            <FluentTextField @bind-Value="NewRole.RoleValue" 
+                             Placeholder="Enter role value"
+                             Label="Role Value"
+                             Required="true" />
+            <FluentCheckbox @bind-Value="NewRole.IsEnabled" 
+                            Label="Enable Role" />
+        </FluentStack>
+    </FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Neutral" 
+                      OnClick="@(() => { HideCreateRoleDialog = true; ResetNewRole(); })">
+            Cancel
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Accent" 
+                      OnClick="@CreateRole"
+                      Loading="@IsCreatingRole">
+            Create Role
+        </FluentButton>
+    </FluentDialogFooter>
+</FluentDialog>
+
+<!-- Assign Member Dialog -->
+<FluentDialog @bind-Hidden="HideAssignDialog" Modal="true" TrapFocus="true" AriaLabel="Assign member to role">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.PersonAdd())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                Assign Member to Role: @SelectedRoleName
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="15">
+            <FluentSelect @bind-Value="SelectedMemberType" 
+                          Label="Member Type"
+                          Items="@MemberTypes" 
+                          OptionText="@(item => item)"
+                          OptionValue="@(item => item)" />
+            
+            <FluentTextField @bind-Value="SearchText" 
+                             Placeholder="Search for users or groups"
+                             Label="Search" />
+            
+            <FluentButton Appearance="Appearance.Neutral" 
+                          OnClick="@SearchMembers">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Search())" />
+                Search
+            </FluentButton>
+
+            @if (SearchResults.Any())
+            {
+                <FluentDataGrid Items="@SearchResults.AsQueryable()" TGridItem="Models.Users">
+                    <TemplateColumn Title="" Align="Align.Center">
+                        <FluentCheckbox Value="@GetSelectionState(context.Id)" 
+                                        ValueChanged="@((bool isChecked) => OnSelectionChanged(context.Id, isChecked))" />
+                    </TemplateColumn>
+                    <PropertyColumn Property="@(c => c.DispalyName)" Title="Name" />
+                    <PropertyColumn Property="@(c => c.Email)" Title="Email" />
+                    <PropertyColumn Property="@(c => c.Type)" Title="Type" />
+                </FluentDataGrid>
+            }
+        </FluentStack>
+    </FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Neutral" 
+                      OnClick="@(() => { HideAssignDialog = true; ResetAssignDialog(); })">
+            Cancel
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Accent" 
+                      OnClick="@AssignMembers"
+                      Loading="@IsAssigningMembers"
+                      Disabled="@(!SelectedMembers.Any())">
+            Assign Members
+        </FluentButton>
+    </FluentDialogFooter>
+</FluentDialog>
+
+@code {
+    [Parameter] public string ApplicationId { get; set; } = string.Empty;
+
+    private List<AppRole> AppRoles = new();
+    private List<Models.Users> SearchResults = new();
+    private List<string> SelectedMembers = new();
+    private string[] MemberTypes = { "user", "group" };
+    
+    private bool IsLoading = true;
+    private bool IsUnauthorized = false;
+    private bool HideCreateRoleDialog = true;
+    private bool HideAssignDialog = true;
+    private bool IsCreatingRole = false;
+    private bool IsAssigningMembers = false;
+    
+    private string ErrorMessage = string.Empty;
+    private string SearchText = string.Empty;
+    private string SelectedMemberType = "user";
+    private string SelectedRoleId = string.Empty;
+    private string SelectedRoleName = string.Empty;
+    private string SelectedAppId = string.Empty;
+    
+    private AppRoleCreationRequest NewRole = new();
+    private ClaimsPrincipal? User { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get authentication state using the injected provider
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            User = authState.User;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting authentication state: {ex.Message}");
+        }
+
+        await CheckAccess();
+        if (!IsUnauthorized)
+        {
+            await LoadRoles();
+        }
+    }
+
+    private async Task CheckAccess()
+    {
+        try
+        {
+            // Get current user context if not available
+            if (User == null)
+            {
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                User = authState.User;
+            }
+
+            var userId = GetUserId();
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var hasAccess = await MSGraphService.GetApplicationOwnerAuthorizationAsync(userId, ApplicationId);
+                IsUnauthorized = !hasAccess;
+            }
+            else
+            {
+                IsUnauthorized = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error checking access: {ex.Message}";
+            IsUnauthorized = true;
+        }
+    }
+
+    private async Task LoadRoles()
+    {
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+
+            AppRoles = await MSGraphService.GetAppRolesAsync(ApplicationId);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading roles: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CreateRole()
+    {
+        try
+        {
+            IsCreatingRole = true;
+            StateHasChanged();
+
+            NewRole.ApplicationId = ApplicationId;
+            var success = await MSGraphService.CreateAppRoleAsync(ApplicationId, NewRole);
+            
+            if (success)
+            {
+                HideCreateRoleDialog = true;
+                ResetNewRole();
+                await LoadRoles();
+                await JSRuntime.InvokeVoidAsync("alert", "Role created successfully!");
+            }
+            else
+            {
+                ErrorMessage = "Failed to create role.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error creating role: {ex.Message}";
+        }
+        finally
+        {
+            IsCreatingRole = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowAssignMemberDialog(string roleId, string roleName, string appId)
+    {
+        SelectedRoleId = roleId;
+        SelectedRoleName = roleName;
+        SelectedAppId = appId;
+        HideAssignDialog = false;
+    }
+
+    private async Task SearchMembers()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(SearchText))
+            {
+                SearchResults = await MSGraphService.GetMembersByTypeAndFilterAsync(SelectedMemberType, SearchText);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error searching members: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task AssignMembers()
+    {
+        try
+        {
+            IsAssigningMembers = true;
+            StateHasChanged();
+
+            foreach (var memberId in SelectedMembers)
+            {
+                await MSGraphService.AssignUserToAppRole(memberId, SelectedAppId, SelectedRoleId, SelectedMemberType);
+            }
+
+            HideAssignDialog = true;
+            ResetAssignDialog();
+            await JSRuntime.InvokeVoidAsync("alert", "Members assigned successfully!");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error assigning members: {ex.Message}";
+        }
+        finally
+        {
+            IsAssigningMembers = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ViewRoleMembers(string roleId, string roleName, string appId)
+    {
+        Navigation.NavigateTo($"/role-members/{ApplicationId}/{roleId}?roleName={roleName}&appId={appId}");
+    }
+
+    private void ResetNewRole()
+    {
+        NewRole = new AppRoleCreationRequest { IsEnabled = true };
+    }
+
+    private void ResetAssignDialog()
+    {
+        SearchResults.Clear();
+        SelectedMembers.Clear();
+        SearchText = string.Empty;
+        SelectedMemberType = "user";
+        SelectedRoleId = string.Empty;
+        SelectedRoleName = string.Empty;
+        SelectedAppId = string.Empty;
+    }
+
+    private string? GetUserId()
+    {
+        if (User == null) return null;
+
+        // Try different claim types that Azure AD B2C might use
+        var userId = User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value
+                  ?? User.FindFirst("oid")?.Value
+                  ?? User.FindFirst("sub")?.Value
+                  ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
+                  ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        // Debug: Log available claims if userId is still null
+        if (string.IsNullOrEmpty(userId))
+        {
+            Console.WriteLine("Available claims:");
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"Type: {claim.Type}, Value: {claim.Value}");
+            }
+        }
+
+        return userId;
+    }
+
+    private bool GetSelectionState(string memberId)
+    {
+        return SelectedMembers.Contains(memberId);
+    }
+
+    private void OnSelectionChanged(string memberId, bool isSelected)
+    {
+        if (isSelected)
+        {
+            if (!SelectedMembers.Contains(memberId))
+            {
+                SelectedMembers.Add(memberId);
+            }
+        }
+        else
+        {
+            SelectedMembers.Remove(memberId);
+        }
+        
+        // Force UI update
+        StateHasChanged();
+    }
+}

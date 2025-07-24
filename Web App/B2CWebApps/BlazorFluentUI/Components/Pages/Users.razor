@@ -1,0 +1,224 @@
+@page "/users"
+@using Models = BlazorFluentUI.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IMSGraphApiServices MSGraphService
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<style>
+    .fluent-data-grid-cell {
+        padding: 8px 4px !important;
+        vertical-align: middle !important;
+    }
+    
+    .action-stack {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 40px !important;
+    }
+    
+    .action-button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        min-width: fit-content !important;
+        white-space: nowrap !important;
+    }
+
+    /* Mobile responsiveness */
+    @@media (max-width: 768px) {
+        .action-button span {
+            display: none !important;
+        }
+        
+        .action-button {
+            min-width: 32px !important;
+            padding: 4px !important;
+        }
+    }
+</style>
+
+<PageTitle>Users - Azure B2C App Roles</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentCard>
+        <FluentLabel Typo="Typography.H2">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Person())" Color="Color.Accent" />
+            Users
+        </FluentLabel>
+        <FluentDivider></FluentDivider>
+        <FluentText Typo="Typography.Body">
+            Manage Azure AD users and their role assignments.
+        </FluentText>
+    </FluentCard>
+
+    <FluentCard>
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10" VerticalAlignment="VerticalAlignment.Center">
+            <FluentTextField @bind-Value="SearchText" 
+                             Placeholder="Search users by email"
+                             Label="Search Users"
+                             Style="flex: 1;" />
+            <FluentButton Appearance="Appearance.Accent" 
+                          OnClick="@SearchUsers">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Color="Color.Neutral" />
+                Search
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" 
+                          OnClick="@LoadAllUsers">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowClockwise())" />
+                Load All
+            </FluentButton>
+        </FluentStack>
+    </FluentCard>
+
+    @if (IsLoading)
+    {
+        <FluentProgressRing />
+        <FluentText>Loading users...</FluentText>
+    }
+    else if (UsersList.Any())
+    {
+        <FluentDataGrid Items="@UsersList.AsQueryable()" GridTemplateColumns="2fr 2fr 1fr 1fr" TGridItem="Models.Users">
+            <PropertyColumn Property="@(c => c.DispalyName)" Sortable="true" Title="Display Name" />
+            <PropertyColumn Property="@(c => c.Email)" Sortable="true" Title="Email" />
+            <PropertyColumn Property="@(c => c.Type)" Title="Type" />
+            <TemplateColumn Title="Actions" Align="Align.Center">
+                <div class="action-stack">
+                    <FluentButton Appearance="Appearance.Accent" 
+                                  Size="Size.Small"
+                                  OnClick="@(() => ViewUserDetails(context))"
+                                  Class="action-button">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Eye())" Color="Color.Neutral" />
+                        <span>View Details</span>
+                    </FluentButton>
+                </div>
+            </TemplateColumn>
+        </FluentDataGrid>
+    }
+    else
+    {
+        <FluentMessageBar Intent="MessageIntent.Info">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Info())" />
+            No users found. Use the search functionality or load all users.
+        </FluentMessageBar>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <FluentMessageBar Intent="MessageIntent.Error">
+            <FluentIcon Value="@(new Icons.Regular.Size20.ErrorCircle())" />
+            @ErrorMessage
+        </FluentMessageBar>
+    }
+</FluentStack>
+
+<!-- User Details Dialog -->
+<FluentDialog @bind-Hidden="HideUserDetailsDialog" Modal="true" TrapFocus="true" AriaLabel="User details">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Person())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                User Details
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        @if (SelectedUser != null)
+        {
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="15">
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10">
+                    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">Name:</FluentLabel>
+                    <FluentText>@SelectedUser.DispalyName</FluentText>
+                </FluentStack>
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10">
+                    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">Email:</FluentLabel>
+                    <FluentText>@SelectedUser.Email</FluentText>
+                </FluentStack>
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10">
+                    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">Type:</FluentLabel>
+                    <FluentText>@SelectedUser.Type</FluentText>
+                </FluentStack>
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10">
+                    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">ID:</FluentLabel>
+                    <FluentText>@SelectedUser.Id</FluentText>
+                </FluentStack>
+            </FluentStack>
+        }
+    </FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Neutral" 
+                      OnClick="@(() => HideUserDetailsDialog = true)">
+            Close
+        </FluentButton>
+    </FluentDialogFooter>
+</FluentDialog>
+
+@code {
+    private List<Models.Users> UsersList = new();
+    private Models.Users? SelectedUser;
+    
+    private bool IsLoading = false;
+    private bool HideUserDetailsDialog = true;
+    
+    private string ErrorMessage = string.Empty;
+    private string SearchText = string.Empty;
+
+    private async Task LoadAllUsers()
+    {
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+
+            UsersList = await MSGraphService.GetUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading users: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchUsers()
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+        {
+            await LoadAllUsers();
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+
+            UsersList = await MSGraphService.GetMembersByTypeAndFilterAsync("user", SearchText);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error searching users: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ViewUserDetails(Models.Users user)
+    {
+        SelectedUser = user;
+        HideUserDetailsDialog = false;
+    }
+}

@@ -1,0 +1,486 @@
+@page "/groups"
+@using BlazorFluentUI.Models
+@using BlazorFluentUI.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@attribute [Authorize]
+@inject IMSGraphApiServices MSGraphService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<style>
+    .fluent-data-grid-cell {
+        padding: 8px 4px !important;
+        vertical-align: middle !important;
+    }
+    
+    .action-stack {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 40px !important;
+    }
+    
+    .action-button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        min-width: fit-content !important;
+        white-space: nowrap !important;
+    }
+
+    /* Mobile responsiveness */
+    @@media (max-width: 768px) {
+        .action-button span {
+            display: none !important;
+        }
+        
+        .action-button {
+            min-width: 32px !important;
+            padding: 4px !important;
+        }
+    }
+</style>
+
+<PageTitle>Groups - Azure B2C App Roles</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentCard>
+        <FluentLabel Typo="Typography.H2">
+            <FluentIcon Value="@(new Icons.Regular.Size24.PeopleTeam())" Color="Color.Accent" />
+            Groups
+        </FluentLabel>
+        <FluentDivider></FluentDivider>
+        <FluentText Typo="Typography.Body">
+            Manage Azure AD groups and their memberships.
+        </FluentText>
+    </FluentCard>
+
+    <FluentCard>
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10" VerticalAlignment="VerticalAlignment.Center">
+            <FluentTextField @bind-Value="SearchText" 
+                             Placeholder="Search groups by name"
+                             Label="Search Groups"
+                             Style="flex: 1;" />
+            <FluentButton Appearance="Appearance.Accent" 
+                          OnClick="@SearchGroups">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Color="Color.Neutral" />
+                Search
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" 
+                          OnClick="@LoadAllGroups">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowClockwise())" />
+                Load All
+            </FluentButton>
+            @if (IsTeamManager)
+            {
+                <FluentButton Appearance="Appearance.Outline" 
+                              OnClick="@LoadOwnedGroups">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Crown())" />
+                    My Groups
+                </FluentButton>
+            }
+        </FluentStack>
+    </FluentCard>
+
+    @if (IsLoading)
+    {
+        <FluentProgressRing />
+        <FluentText>Loading groups...</FluentText>
+    }
+    else if (GroupsList.Any())
+    {
+        <FluentDataGrid Items="@GroupsList.AsQueryable()" GridTemplateColumns="2fr 2fr 1fr 2fr" TGridItem="BlazorFluentUI.Models.Groups">
+            <PropertyColumn Property="@(c => c.DispalyName)" Sortable="true" Title="Group Name" />
+            <PropertyColumn Property="@(c => c.Email)" Title="Email" />
+            <PropertyColumn Property="@(c => c.Type)" Title="Type" />
+            <TemplateColumn Title="Actions" Align="Align.Center">
+                <FluentStack Orientation="Orientation.Horizontal" 
+                             HorizontalGap="5" 
+                             VerticalAlignment="VerticalAlignment.Center"
+                             Class="action-stack">
+                    <FluentButton Appearance="Appearance.Accent" 
+                                  Size="Size.Small"
+                                  OnClick="@(() => ViewGroupMembers(context))"
+                                  Class="action-button">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.People())" Color="Color.Neutral" />
+                        <span>Members</span>
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Neutral" 
+                                  Size="Size.Small"
+                                  OnClick="@(() => ShowAddMembersDialog(context))"
+                                  Class="action-button">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.PersonAdd())" />
+                        <span>Add Members</span>
+                    </FluentButton>
+                </FluentStack>
+            </TemplateColumn>
+        </FluentDataGrid>
+    }
+    else
+    {
+        <FluentMessageBar Intent="MessageIntent.Info">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Info())" />
+            No groups found. Use the search functionality or load all groups.
+        </FluentMessageBar>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <FluentMessageBar Intent="MessageIntent.Error">
+            <FluentIcon Value="@(new Icons.Regular.Size20.ErrorCircle())" />
+            @ErrorMessage
+        </FluentMessageBar>
+    }
+</FluentStack>
+
+<!-- Group Members Dialog -->
+<FluentDialog @bind-Hidden="HideMembersDialog" Modal="true" TrapFocus="true" AriaLabel="Group members">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.People())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                Members of @SelectedGroup?.DispalyName
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        @if (IsLoadingMembers)
+        {
+            <FluentProgressRing />
+            <FluentText>Loading members...</FluentText>
+        }
+        else if (GroupMembers.Any())
+        {
+            <FluentDataGrid Items="@GroupMembers.AsQueryable()" TGridItem="Models.Users">
+                <PropertyColumn Property="@(c => c.DispalyName)" Title="Name" />
+                <PropertyColumn Property="@(c => c.Email)" Title="Email" />
+                <TemplateColumn Title="Actions" Align="Align.Center">
+                    <div class="action-stack">
+                        <FluentButton Appearance="Appearance.Outline" 
+                                      Size="Size.Small"
+                                      OnClick="@(() => RemoveMember(context))"
+                                      Class="action-button">
+                            <FluentIcon Value="@(new Icons.Regular.Size16.PersonDelete())" />
+                            <span>Remove</span>
+                        </FluentButton>
+                    </div>
+                </TemplateColumn>
+            </FluentDataGrid>
+        }
+        else
+        {
+            <FluentText>No members found in this group.</FluentText>
+        }
+    </FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Neutral" 
+                      OnClick="@(() => HideMembersDialog = true)">
+            Close
+        </FluentButton>
+    </FluentDialogFooter>
+</FluentDialog>
+
+<!-- Add Members Dialog -->
+<FluentDialog @bind-Hidden="HideAddDialog" Modal="true" TrapFocus="true" AriaLabel="Add members to group">
+    <FluentDialogHeader ShowDismiss="true">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.PersonAdd())" />
+            <FluentLabel Typo="Typography.PaneHeader">
+                Add Members to @SelectedGroup?.DispalyName
+            </FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+
+    <FluentDialogBody>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="15">
+            <FluentTextField @bind-Value="SearchText" 
+                             Placeholder="Search for users by email"
+                             Label="Search Users" />
+            
+            <FluentButton Appearance="Appearance.Neutral" 
+                          OnClick="@SearchUsersForGroup">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Search())" />
+                Search
+            </FluentButton>
+
+            @if (AvailableUsers.Any())
+            {
+                <FluentDataGrid Items="@AvailableUsers.AsQueryable()" TGridItem="Models.Users">
+                    <SelectColumn TGridItem="Models.Users" Property="@(u => SelectedUserIds.Contains(u.Id))" />
+                    <PropertyColumn Property="@(c => c.DispalyName)" Title="Name" />
+                    <PropertyColumn Property="@(c => c.Email)" Title="Email" />
+                </FluentDataGrid>
+            }
+        </FluentStack>
+    </FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Neutral" 
+                      OnClick="@(() => { HideAddDialog = true; ResetAddDialog(); })">
+            Cancel
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Accent" 
+                      OnClick="@AddSelectedMembers"
+                      Loading="@IsAddingMembers"
+                      Disabled="@(!SelectedUserIds.Any())">
+            Add Members
+        </FluentButton>
+    </FluentDialogFooter>
+</FluentDialog>
+
+@code {
+    private List<Models.Groups> GroupsList = new();
+    private List<Models.Users> GroupMembers = new();
+    private List<Models.Users> AvailableUsers = new();
+    private List<string> SelectedUserIds = new();
+    
+    private Models.Groups? SelectedGroup;
+    private ClaimsPrincipal? User { get; set; }
+    
+    private bool IsLoading = false;
+    private bool IsLoadingMembers = false;
+    private bool IsAddingMembers = false;
+    private bool HideMembersDialog = true;
+    private bool HideAddDialog = true;
+    
+    private string ErrorMessage = string.Empty;
+    private string SearchText = string.Empty;
+    
+    private bool IsTeamManager => User?.HasClaim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", "TeamManager") ?? false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        User = authState.User;
+    }
+
+    private async Task LoadAllGroups()
+    {
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+
+            GroupsList = await MSGraphService.GetGroupsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading groups: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadOwnedGroups()
+    {
+        try
+        {
+            // Get current user context if not available
+            if (User == null)
+            {
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                User = authState.User;
+            }
+
+            var userId = GetUserId();
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                ErrorMessage = "User ID not found.";
+                return;
+            }
+
+            IsLoading = true;
+            StateHasChanged();
+
+            GroupsList = await MSGraphService.GetGroupsOwnedByUserAsync(userId);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading owned groups: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchGroups()
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+        {
+            await LoadAllGroups();
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+
+            GroupsList = (await MSGraphService.GetMembersByTypeAndFilterAsync("group", SearchText))
+                .Cast<Models.Groups>().ToList();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error searching groups: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ViewGroupMembers(Models.Groups group)
+    {
+        try
+        {
+            SelectedGroup = group;
+            HideMembersDialog = false;
+            IsLoadingMembers = true;
+            StateHasChanged();
+
+            GroupMembers = await MSGraphService.GetUsersByGroupIdAsync(group.Id);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading group members: {ex.Message}";
+        }
+        finally
+        {
+            IsLoadingMembers = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowAddMembersDialog(Models.Groups group)
+    {
+        SelectedGroup = group;
+        HideAddDialog = false;
+    }
+
+    private async Task SearchUsersForGroup()
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+        {
+            return;
+        }
+
+        try
+        {
+            AvailableUsers = await MSGraphService.GetMembersByTypeAndFilterAsync("user", SearchText);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error searching users: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task AddSelectedMembers()
+    {
+        if (SelectedGroup == null || !SelectedUserIds.Any())
+            return;
+
+        try
+        {
+            IsAddingMembers = true;
+            StateHasChanged();
+
+            var success = await MSGraphService.AddUsersToGroupAsync(SelectedUserIds, SelectedGroup.Id);
+            
+            if (success)
+            {
+                HideAddDialog = true;
+                ResetAddDialog();
+                await JSRuntime.InvokeVoidAsync("alert", "Members added successfully!");
+            }
+            else
+            {
+                ErrorMessage = "Failed to add members to group.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error adding members: {ex.Message}";
+        }
+        finally
+        {
+            IsAddingMembers = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RemoveMember(Models.Users member)
+    {
+        if (SelectedGroup == null)
+            return;
+
+        try
+        {
+            var success = await MSGraphService.RemoveUserFromGroupAsync(member.Id, SelectedGroup.Id);
+            
+            if (success)
+            {
+                GroupMembers.Remove(member);
+                await JSRuntime.InvokeVoidAsync("alert", "Member removed successfully!");
+                StateHasChanged();
+            }
+            else
+            {
+                ErrorMessage = "Failed to remove member from group.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error removing member: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private void ResetAddDialog()
+    {
+        AvailableUsers.Clear();
+        SelectedUserIds.Clear();
+        SearchText = string.Empty;
+    }
+
+    private string? GetUserId()
+    {
+        if (User == null) return null;
+
+        // Try different claim types that Azure AD B2C might use
+        var userId = User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value
+                  ?? User.FindFirst("oid")?.Value
+                  ?? User.FindFirst("sub")?.Value
+                  ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
+                  ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        // Debug: Log available claims if userId is still null
+        if (string.IsNullOrEmpty(userId))
+        {
+            Console.WriteLine("Available claims:");
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"Type: {claim.Type}, Value: {claim.Value}");
+            }
+        }
+
+        return userId;
+    }
+}
