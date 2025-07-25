@@ -12,38 +12,71 @@
 @rendermode InteractiveServer
 
 <style>
-    .fluent-data-grid-cell {
-        padding: 8px 4px !important;
-        vertical-align: middle !important;
+    .data-grid-row {
+        min-height: 60px !important;
+        height: auto !important;
     }
     
-    .action-stack {
-        width: 100% !important;
-        height: 100% !important;
+    .action-buttons-container {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        min-height: 40px !important;
+        gap: 8px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 60px !important;
     }
     
     .action-button {
+        height: 40px !important;
+        min-height: 40px !important;
+        padding: 8px 12px 49px 12px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 4px !important;
-        min-width: fit-content !important;
+        gap: 6px !important;
+        font-size: 14px !important;
         white-space: nowrap !important;
+        margin: 0 !important;
     }
-
-    /* Mobile responsiveness */
+    
+    .action-button .fluent-icon {
+        width: 16px !important;
+        height: 16px !important;
+    }
+    
+    /* Override FluentDataGrid cell styles for action column */
+    .fluent-data-grid .col-actions {
+        padding: 0 !important;
+        vertical-align: middle !important;
+    }
+    
+    /* Responsive design for mobile */
     @@media (max-width: 768px) {
+        .action-button {
+            padding: 6px 8px 36px 8px !important;
+            min-width: 36px !important;
+            height: 36px !important;
+            min-height: 36px !important;
+        }
+        
         .action-button span {
             display: none !important;
         }
         
+        .action-buttons-container {
+            gap: 4px !important;
+        }
+    }
+    
+    @@media (max-width: 480px) {
         .action-button {
+            padding: 4px 6px 32px 6px !important;
             min-width: 32px !important;
-            padding: 4px !important;
+            height: 32px !important;
+            min-height: 32px !important;
         }
     }
 </style>
@@ -69,20 +102,20 @@
                              Label="Search Groups"
                              Style="flex: 1;" />
             <FluentButton Appearance="Appearance.Accent" 
+                          IconStart="@(new Icons.Regular.Size16.Search())"
                           OnClick="@SearchGroups">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Color="Color.Neutral" />
                 Search
             </FluentButton>
             <FluentButton Appearance="Appearance.Neutral" 
+                          IconStart="@(new Icons.Regular.Size16.ArrowClockwise())"
                           OnClick="@LoadAllGroups">
-                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowClockwise())" />
                 Load All
             </FluentButton>
             @if (IsTeamManager)
             {
                 <FluentButton Appearance="Appearance.Outline" 
+                              IconStart="@(new Icons.Regular.Size16.Crown())"
                               OnClick="@LoadOwnedGroups">
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Crown())" />
                     My Groups
                 </FluentButton>
             }
@@ -101,25 +134,22 @@
             <PropertyColumn Property="@(c => c.Email)" Title="Email" />
             <PropertyColumn Property="@(c => c.Type)" Title="Type" />
             <TemplateColumn Title="Actions" Align="Align.Center">
-                <FluentStack Orientation="Orientation.Horizontal" 
-                             HorizontalGap="5" 
-                             VerticalAlignment="VerticalAlignment.Center"
-                             Class="action-stack">
+                <div class="action-buttons-container">
                     <FluentButton Appearance="Appearance.Accent" 
                                   Size="Size.Small"
+                                  IconStart="@(new Icons.Regular.Size16.People())"
                                   OnClick="@(() => ViewGroupMembers(context))"
                                   Class="action-button">
-                        <FluentIcon Value="@(new Icons.Regular.Size16.People())" Color="Color.Neutral" />
                         <span>Members</span>
                     </FluentButton>
                     <FluentButton Appearance="Appearance.Neutral" 
                                   Size="Size.Small"
+                                  IconStart="@(new Icons.Regular.Size16.PersonAdd())"
                                   OnClick="@(() => ShowAddMembersDialog(context))"
                                   Class="action-button">
-                        <FluentIcon Value="@(new Icons.Regular.Size16.PersonAdd())" />
                         <span>Add Members</span>
                     </FluentButton>
-                </FluentStack>
+                </div>
             </TemplateColumn>
         </FluentDataGrid>
     }
@@ -163,12 +193,12 @@
                 <PropertyColumn Property="@(c => c.DispalyName)" Title="Name" />
                 <PropertyColumn Property="@(c => c.Email)" Title="Email" />
                 <TemplateColumn Title="Actions" Align="Align.Center">
-                    <div class="action-stack">
+                    <div class="action-buttons-container">
                         <FluentButton Appearance="Appearance.Outline" 
                                       Size="Size.Small"
+                                      IconStart="@(new Icons.Regular.Size16.PersonDelete())"
                                       OnClick="@(() => RemoveMember(context))"
                                       Class="action-button">
-                            <FluentIcon Value="@(new Icons.Regular.Size16.PersonDelete())" />
                             <span>Remove</span>
                         </FluentButton>
                     </div>
@@ -207,8 +237,8 @@
                              Label="Search Users" />
             
             <FluentButton Appearance="Appearance.Neutral" 
+                          IconStart="@(new Icons.Regular.Size16.Search())"
                           OnClick="@SearchUsersForGroup">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Search())" />
                 Search
             </FluentButton>
 

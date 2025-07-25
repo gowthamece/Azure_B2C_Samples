@@ -188,4 +188,24 @@ code {
         left: 20px;
         right: unset;
     }
+    .control.icon-only {
+        padding: 0 calc((10 + (var(--design-unit) * 2 * var(--density))) * 1px) !important;
+        line-height: 0 !important;
+    }
+
+    /* More specific selectors to override FluentUI constructed styles */
+    .fluent-button.control.icon-only,
+    fluent-button.control.icon-only,
+    [class*="control"][class*="icon-only"] {
+        padding: 0 calc((10 + (var(--design-unit) * 2 * var(--density))) * 1px) !important;
+        line-height: 0 !important;
+    }
+
+    /* Target FluentUI buttons specifically */
+    fluent-button[appearance="accent"].control.icon-only,
+    fluent-button[appearance="neutral"].control.icon-only,
+    .fluent-button[appearance="accent"].control.icon-only,
+    .fluent-button[appearance="neutral"].control.icon-only {
+        padding: 0 calc((10 + (var(--design-unit) * 2 * var(--density))) * 1px) !important;
+    }
 }

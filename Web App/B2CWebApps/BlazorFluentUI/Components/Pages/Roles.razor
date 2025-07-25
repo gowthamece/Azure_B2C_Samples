@@ -11,6 +11,76 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
+<style>
+    .data-grid-row {
+        min-height: 60px !important;
+        height: auto !important;
+    }
+    
+    .action-buttons-container {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 60px !important;
+    }
+    
+    .action-button {
+        height: 40px !important;
+        min-height: 40px !important;
+        padding: 8px 12px 49px 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        font-size: 14px !important;
+        white-space: nowrap !important;
+        margin: 0 !important;
+    }
+    
+    .action-button .fluent-icon {
+        width: 16px !important;
+        height: 16px !important;
+    }
+    
+    /* Override FluentDataGrid cell styles for action column */
+    .fluent-data-grid .col-actions {
+        padding: 0 !important;
+        vertical-align: middle !important;
+    }
+    
+    /* Responsive design for mobile */
+    @@media (max-width: 768px) {
+        .action-button {
+            padding: 6px 8px 36px 8px !important;
+            min-width: 36px !important;
+            height: 36px !important;
+            min-height: 36px !important;
+        }
+        
+        .action-button span {
+            display: none !important;
+        }
+        
+        .action-buttons-container {
+            gap: 4px !important;
+        }
+    }
+    
+    @@media (max-width: 480px) {
+        .action-button {
+            padding: 4px 6px 32px 6px !important;
+            min-width: 32px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+        }
+    }
+</style>
+
 <PageTitle>App Roles - Azure B2C App Roles</PageTitle>
 
 <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
@@ -18,8 +88,8 @@
         <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10" VerticalAlignment="VerticalAlignment.Center">
             <FluentButton Appearance="Appearance.Neutral" 
                           Size="Size.Small"
+                          IconStart="@(new Icons.Regular.Size16.ArrowLeft())"
                           OnClick="@(() => Navigation.NavigateTo("/applications"))">
-                <FluentIcon Value="@(new Icons.Regular.Size16.ArrowLeft())" />
                 Back to Applications
             </FluentButton>
             <FluentLabel Typo="Typography.H2">
@@ -45,11 +115,10 @@
         <FluentCard>
             <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10" VerticalAlignment="VerticalAlignment.Center">
                 <FluentLabel Typo="Typography.H4">Create New Role</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" 
-                              Size="Size.Small"
-                              OnClick="@(() => HideCreateRoleDialog = false)">
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Add())" />
-                    Add Role
+                <FluentButton Appearance="Appearance.Accent" Size="Size.Small"
+                              IconStart="@(new Icons.Regular.Size16.Add())"
+                              OnClick="@(() => HideCreateRoleDialog = false)" >
+                    <span style="padding:5px">Add Role</span>
                 </FluentButton>
             </FluentStack>
         </FluentCard>
@@ -61,24 +130,26 @@
         }
         else if (AppRoles.Any())
         {
-            <FluentDataGrid Items="@AppRoles.AsQueryable()" GridTemplateColumns="2fr 1fr 1fr" TGridItem="AppRole">
+            <FluentDataGrid Items="@AppRoles.AsQueryable()" TGridItem="AppRole" Class="data-grid-row">
                 <PropertyColumn Property="@(c => c.Name)" Sortable="true" Title="Role Name" />
                 <PropertyColumn Property="@(c => c.Id)" Title="Role ID" />
-                <TemplateColumn Title="Actions" >
-                     <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5" VerticalAlignment="VerticalAlignment.Center">
-                        <FluentButton Appearance="Appearance.Accent"                                       
+                <TemplateColumn Title="Actions" Align="Align.Center">
+                     <div class="action-buttons-container">
+                        <FluentButton IconStart="@(new Icons.Regular.Size16.People())" Color="Color.Lightweight" Appearance="Appearance.Accent"
                                       OnClick="@(() => ViewRoleMembers(context.Id, context.Name, context.AppId))"
-                                      Style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                          <FluentIcon Value="@(new Icons.Regular.Size20.People())" Color="Color.Lightweight" />
-                            Members
+                                      Class="action-button"
+                                      Size="Size.Medium">
+                          
+                           Members
                         </FluentButton>
-                        <FluentButton Appearance="Appearance.Neutral"                                       
+                        <FluentButton IconStart="@(new Icons.Regular.Size16.PersonAdd())" Appearance="Appearance.Neutral"
                                       OnClick="@(() => ShowAssignMemberDialog(context.Id, context.Name, context.AppId))"
-                                      Style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                            <FluentIcon Value="@(new Icons.Regular.Size20.PersonAdd())" />
-                            <span>Assign</span>
+                                      Class="action-button"
+                                      Size="Size.Medium">
+                           
+                            Assign
                         </FluentButton>
-                     </FluentStack> 
+                     </div> 
                 </TemplateColumn>
             </FluentDataGrid>
         }
@@ -166,9 +237,8 @@
                              Placeholder="Search for users or groups"
                              Label="Search" />
             
-            <FluentButton Appearance="Appearance.Neutral" 
-                          OnClick="@SearchMembers">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Search())" />
+            <FluentButton IconStart="@(new Icons.Regular.Size16.Search())" Appearance="Appearance.Neutral"
+                          OnClick="@SearchMembers">                
                 Search
             </FluentButton>
 
