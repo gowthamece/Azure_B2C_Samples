@@ -464,6 +464,41 @@ namespace BlazorFluentUI.Services
             return ownedGroups;
         }
 
+        public async Task<List<Application>> GetApplicationsOwnedByUserAsync(string userId)
+        {
+            var ownedApplications = new List<Application>();
+            try
+            {
+                var graphClient = GetGraphClientAsync();
+                var applications = await graphClient.Users[userId].OwnedObjects
+                    .GetAsync(rc =>
+                    {
+                        rc.QueryParameters.Select = new[] { "id", "displayName", "appId" };
+                    });
+
+                if (applications?.Value != null)
+                {
+                    foreach (var directoryObject in applications.Value)
+                    {
+                        if (directoryObject is Microsoft.Graph.Models.Application app)
+                        {
+                            ownedApplications.Add(new Application
+                            {
+                                Id = app.Id,
+                                Name = app.DisplayName,
+                                appId = app.AppId
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting applications owned by user");
+            }
+            return ownedApplications;
+        }
+
         public async Task<bool> AddUsersToGroupAsync(List<string> userIds, string groupId)
         {
             try

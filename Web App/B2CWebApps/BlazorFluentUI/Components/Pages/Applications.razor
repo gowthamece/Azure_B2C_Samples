@@ -81,17 +81,17 @@
     }
 </style>
 
-<PageTitle>Applications - Azure B2C App Roles</PageTitle>
+<PageTitle>My Applications - Azure B2C App Roles</PageTitle>
 
 <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
     <FluentCard>
         <FluentLabel Typo="Typography.H2">
             <FluentIcon Value="@(new Icons.Regular.Size24.Apps())" Color="Color.Accent" />
-            Applications
+            My Applications
         </FluentLabel>
         <FluentDivider></FluentDivider>
         <FluentText Typo="Typography.Body">
-            Manage Azure AD applications and their roles.
+            Manage Azure AD applications that you own and their roles.
         </FluentText>
     </FluentCard>
 
@@ -102,9 +102,10 @@
     }
     else if (ApplicationsList.Any())
     {
-        <FluentDataGrid Items="@ApplicationsList.AsQueryable()" GridTemplateColumns="1fr 2fr 1fr" TGridItem="Application">
+        <FluentDataGrid Items="@ApplicationsList.AsQueryable()" GridTemplateColumns="1fr 1fr" TGridItem="Application">
             <PropertyColumn Property="@(c => c.Name)" Sortable="true" Title="Application Name" />
-            <PropertyColumn Property="@(c => c.appId)" Sortable="true" Title="Application ID" />
+            @* Temporarily hidden - Application ID column *@
+            @* <PropertyColumn Property="@(c => c.appId)" Sortable="true" Title="Application ID" /> *@
             <TemplateColumn Title="Actions" Align="Align.Center">
                 <div class="action-buttons-container">
                     <FluentButton Appearance="Appearance.Accent" 
@@ -122,7 +123,7 @@
     {
         <FluentMessageBar Intent="MessageIntent.Info">
             <FluentIcon Value="@(new Icons.Regular.Size20.Info())" />
-            No applications found.
+            No applications found that you own. You need to be an owner of an application to see it here.
         </FluentMessageBar>
     }
 
@@ -169,7 +170,19 @@
             IsLoading = true;
             StateHasChanged();
 
-            ApplicationsList = await MSGraphService.GetApplicationsAsync();
+            // Get the current user's ID
+            var userId = GetUserId();
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                // Load only applications owned by the current user
+                ApplicationsList = await MSGraphService.GetApplicationsOwnedByUserAsync(userId);
+            }
+            else
+            {
+                ErrorMessage = "Unable to determine user identity. Please ensure you are properly authenticated.";
+                ApplicationsList = new();
+            }
         }
         catch (Exception ex)
         {

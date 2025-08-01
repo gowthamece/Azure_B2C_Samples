@@ -19,6 +19,7 @@ namespace BlazorFluentUI.Services
         Task<List<Users>> GetMembersByTypeAndFilterAsync(string memberType, string firstNameStartsWith);
         Task<bool> CreateAppRoleAsync(string appId, AppRoleCreationRequest appRoleRequest);
         Task<List<Groups>> GetGroupsOwnedByUserAsync(string userId);
+        Task<List<Application>> GetApplicationsOwnedByUserAsync(string userId);
         Task<bool> AddUsersToGroupAsync(List<string> userIds, string groupId);
         Task<List<Users>> GetUsersByGroupIdAsync(string groupId);
         Task<bool> RemoveUserFromGroupAsync(string userId, string groupId);
