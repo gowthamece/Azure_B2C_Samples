@@ -106,11 +106,6 @@
                           OnClick="@SearchGroups">
                 Search
             </FluentButton>
-            <FluentButton Appearance="Appearance.Neutral" 
-                          IconStart="@(new Icons.Regular.Size16.Globe())"
-                          OnClick="@LoadAllGroups">
-                Load All Groups
-            </FluentButton>
             <FluentButton Appearance="Appearance.Outline" 
                           IconStart="@(new Icons.Regular.Size16.ArrowClockwise())"
                           OnClick="@LoadOwnedGroups">
@@ -242,7 +237,10 @@
             @if (AvailableUsers.Any())
             {
                 <FluentDataGrid Items="@AvailableUsers.AsQueryable()" TGridItem="Models.Users">
-                    <SelectColumn TGridItem="Models.Users" Property="@(u => SelectedUserIds.Contains(u.Id))" />
+                    <TemplateColumn Title="" Align="Align.Center">
+                        <FluentCheckbox Value="@GetSelectionState(context.Id)" 
+                                        ValueChanged="@((bool isChecked) => OnSelectionChanged(context.Id, isChecked))" />
+                    </TemplateColumn>
                     <PropertyColumn Property="@(c => c.DispalyName)" Title="Name" />
                     <PropertyColumn Property="@(c => c.Email)" Title="Email" />
                 </FluentDataGrid>
@@ -293,26 +291,6 @@
         await LoadOwnedGroups();
     }
 
-    private async Task LoadAllGroups()
-    {
-        try
-        {
-            IsLoading = true;
-            StateHasChanged();
-
-            GroupsList = await MSGraphService.GetGroupsAsync();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Error loading groups: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-            StateHasChanged();
-        }
-    }
-
     private async Task LoadOwnedGroups()
     {
         try
@@ -352,7 +330,7 @@
     {
         if (string.IsNullOrWhiteSpace(SearchText))
         {
-            await LoadAllGroups();
+            await LoadOwnedGroups();
             return;
         }
 
@@ -361,8 +339,16 @@
             IsLoading = true;
             StateHasChanged();
 
-            GroupsList = (await MSGraphService.GetMembersByTypeAndFilterAsync("group", SearchText))
-                .Cast<Models.Groups>().ToList();
+            // GetMembersByTypeAndFilterAsync returns List<Users> even for groups
+            // We need to convert the Users objects to Groups objects
+            var searchResults = await MSGraphService.GetMembersByTypeAndFilterAsync("group", SearchText);
+            GroupsList = searchResults.Select(user => new Models.Groups
+            {
+                Id = user.Id,
+                DispalyName = user.DispalyName,
+                Email = user.Email,
+                Type = "Group"
+            }).ToList();
         }
         catch (Exception ex)
         {
@@ -488,6 +474,29 @@
         AvailableUsers.Clear();
         SelectedUserIds.Clear();
         SearchText = string.Empty;
+    }
+
+    private bool GetSelectionState(string userId)
+    {
+        return SelectedUserIds.Contains(userId);
+    }
+
+    private void OnSelectionChanged(string userId, bool isSelected)
+    {
+        if (isSelected)
+        {
+            if (!SelectedUserIds.Contains(userId))
+            {
+                SelectedUserIds.Add(userId);
+            }
+        }
+        else
+        {
+            SelectedUserIds.Remove(userId);
+        }
+        
+        // Force UI update
+        StateHasChanged();
     }
 
     private string? GetUserId()
