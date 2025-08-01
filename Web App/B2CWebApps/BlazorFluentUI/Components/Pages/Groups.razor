@@ -81,18 +81,18 @@
     }
 </style>
 
-<PageTitle>Groups - Azure B2C App Roles</PageTitle>
+<PageTitle>Groups I Own - Azure B2C App Roles</PageTitle>
 
 <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
     <FluentCard>
         <FluentLabel Typo="Typography.H2">
             <FluentIcon Value="@(new Icons.Regular.Size24.PeopleTeam())" Color="Color.Accent" />
-            Groups
+            Groups I Own
         </FluentLabel>
         <FluentDivider></FluentDivider>
-        <FluentText Typo="Typography.Body">
-            Manage Azure AD groups and their memberships.
-        </FluentText>
+        <p>
+            Manage Azure AD groups that you own and their memberships.
+        </p>
     </FluentCard>
 
     <FluentCard>
@@ -107,25 +107,22 @@
                 Search
             </FluentButton>
             <FluentButton Appearance="Appearance.Neutral" 
-                          IconStart="@(new Icons.Regular.Size16.ArrowClockwise())"
+                          IconStart="@(new Icons.Regular.Size16.Globe())"
                           OnClick="@LoadAllGroups">
-                Load All
+                Load All Groups
             </FluentButton>
-            @if (IsTeamManager)
-            {
-                <FluentButton Appearance="Appearance.Outline" 
-                              IconStart="@(new Icons.Regular.Size16.Crown())"
-                              OnClick="@LoadOwnedGroups">
-                    My Groups
-                </FluentButton>
-            }
+            <FluentButton Appearance="Appearance.Outline" 
+                          IconStart="@(new Icons.Regular.Size16.ArrowClockwise())"
+                          OnClick="@LoadOwnedGroups">
+                Refresh My Groups
+            </FluentButton>
         </FluentStack>
     </FluentCard>
 
     @if (IsLoading)
     {
         <FluentProgressRing />
-        <FluentText>Loading groups...</FluentText>
+        <p>Loading groups...</p>
     }
     else if (GroupsList.Any())
     {
@@ -185,7 +182,7 @@
         @if (IsLoadingMembers)
         {
             <FluentProgressRing />
-            <FluentText>Loading members...</FluentText>
+            <p>Loading members...</p>
         }
         else if (GroupMembers.Any())
         {
@@ -207,7 +204,7 @@
         }
         else
         {
-            <FluentText>No members found in this group.</FluentText>
+            <p>No members found in this group.</p>
         }
     </FluentDialogBody>
 
@@ -291,6 +288,9 @@
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         User = authState.User;
+        
+        // Automatically load owned groups on page initialization
+        await LoadOwnedGroups();
     }
 
     private async Task LoadAllGroups()
