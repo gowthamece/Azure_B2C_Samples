@@ -1,0 +1,30 @@
+@page "/signout"
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.OpenIdConnect
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.Identity.Web
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+@code {
+    private bool hasRendered = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasRendered)
+        {
+            hasRendered = true;
+            
+            // Use JavaScript to navigate to the Microsoft Identity sign-out endpoint
+            var scheme = OpenIdConnectDefaults.AuthenticationScheme;
+            var signOutUrl = $"/MicrosoftIdentity/Account/SignOut/{scheme}";
+            
+            await JSRuntime.InvokeVoidAsync("window.location.href", signOutUrl);
+        }
+    }
+}
+
+<div style="text-align: center; padding: 50px;">
+    <p>Signing out...</p>
+    <p>Please wait while we redirect you to complete the sign-out process.</p>
+</div>

@@ -17,6 +17,25 @@ builder.Services.AddRazorComponents()
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
 
+builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, options =>
+{
+    var postLogoutRedirectUri = builder.Configuration["AzureAd:PostLogoutRedirectUri"];
+
+    options.Events = new OpenIdConnectEvents
+    {
+        OnRedirectToIdentityProviderForSignOut = context =>
+        {
+            if (!string.IsNullOrEmpty(postLogoutRedirectUri))
+            {
+                context.ProtocolMessage.PostLogoutRedirectUri = postLogoutRedirectUri;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
+});
+
+
 // Add Key Vault configuration if in production or staging
 if (builder.Environment.IsProduction() || builder.Environment.IsStaging())
 {
@@ -74,5 +93,8 @@ app.MapRazorComponents<App>()
 
 // Map Razor Pages for authentication
 app.MapRazorPages();
+
+// Map controllers for Microsoft Identity
+app.MapControllers();
 
 app.Run();

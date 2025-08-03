@@ -1,0 +1,25 @@
+@inherits LayoutComponentBase
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<div class="empty-layout">
+    <main class="empty-main">
+        @Body
+    </main>
+</div>
+
+<style>
+    .empty-layout {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f5f5f5;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .empty-main {
+        width: 100%;
+        max-width: 800px;
+        padding: 20px;
+    }
+</style>

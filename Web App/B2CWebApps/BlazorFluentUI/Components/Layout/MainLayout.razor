@@ -1,8 +1,70 @@
 ﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.JSInterop
+@using BlazorFluentUI.Components
+@using BlazorFluentUI.Components.Layout
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<style>
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 0 16px;
+    }
+    
+    /* Main Layout */
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    
+    header {
+        background-color: #f5f5f5;
+        padding: 8px 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    main {
+        display: flex;
+        flex: 1;
+    }
+    
+    nav {
+        width: 200px;
+        background-color: #f9f9f9;
+        padding: 16px;
+    }
+    
+    .body-content {
+        flex: 1;
+        padding: 20px;
+    }
+    
+    footer {
+        background-color: #f5f5f5;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+    }
+</style>
 
 <FluentLayout>
     <FluentHeader>
-        BlazorFluentUI
+        <div class="header-content">
+            <h3 style="margin: 0;">BlazorFluentUI</h3>
+            @if (IsAuthenticated)
+            {
+                <UserDropdown IsAuthenticated="@IsAuthenticated" />
+            }
+        </div>
     </FluentHeader>
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
         <NavMenu />
@@ -24,3 +86,13 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool IsAuthenticated { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        IsAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+    }
+}

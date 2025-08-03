@@ -1,0 +1,157 @@
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="user-section">
+    <span>Welcome, @UserDisplayName</span>
+    <div class="avatar" @onclick="ToggleDropdown" @onclick:stopPropagation="true" title="Account - Click to toggle dropdown">
+        @UserInitials
+    </div>
+    @if (DropdownOpen)
+    {
+        <div class="dropdown-backdrop" @onclick="CloseDropdown"></div>
+    }
+    <div class="dropdown @(DropdownOpen ? "open" : "")" @onclick:stopPropagation="true">
+        <a href="/MicrosoftIdentity/Account/SignOut" class="dropdown-btn" style="text-decoration: none">Sign Out</a>
+    </div>
+</div>
+
+<style>
+    .user-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent-fill-rest, #0078d4);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 18px;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.2s;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        border: 2px solid transparent;
+    }
+
+    .avatar:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transform: scale(1.05);
+        border-color: var(--accent-fill-hover, #106ebe);
+    }
+
+    .avatar:active {
+        transform: scale(0.95);
+    }
+
+    .dropdown {
+        position: absolute;
+        top: 50px;
+        right: 0;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 140px;
+        z-index: 1000;
+        padding: 8px 0;
+        display: none;
+    }
+    
+    .dropdown.open {
+        display: block;
+    }
+    
+    .dropdown-backdrop {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 999;
+        background: transparent;
+    }
+
+    .dropdown-btn {
+        background: none;
+        border: none;
+        color: #333;
+        width: 100%;
+        padding: 12px 20px;
+        text-align: left;
+        cursor: pointer;
+        font-size: 14px;
+        border-radius: 0;
+        transition: background 0.2s;
+        display: block;
+        text-decoration: none;
+    }
+    
+    .dropdown-btn:hover {
+        background: var(--accent-fill-rest, #0078d4);
+        color: #fff;
+        text-decoration: none;
+    }
+</style>
+
+@code {
+    [Parameter] public bool IsAuthenticated { get; set; }
+    private string UserDisplayName { get; set; } = string.Empty;
+    private string UserInitials { get; set; } = "";
+    private bool DropdownOpen { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsAuthenticated)
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            UserDisplayName = GetUserDisplayName(authState.User);
+            UserInitials = GetUserInitials(authState.User);
+        }
+    }
+
+    private string GetUserDisplayName(ClaimsPrincipal user)
+    {
+        // Try different claim types for display name
+        return user.FindFirst("name")?.Value
+            ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value
+            ?? user.FindFirst("preferred_username")?.Value
+            ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value
+            ?? user.Identity?.Name
+            ?? "User";
+    }
+
+    private string GetUserInitials(ClaimsPrincipal user)
+    {
+        var name = user.FindFirst("name")?.Value
+            ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value
+            ?? user.FindFirst("preferred_username")?.Value
+            ?? user.Identity?.Name
+            ?? "User";
+        
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+            return parts[0].Length > 1 ? parts[0].Substring(0, 2).ToUpper() : parts[0].ToUpper();
+        return (parts[0][0].ToString() + parts[^1][0].ToString()).ToUpper();
+    }
+
+    private void ToggleDropdown()
+    {
+        DropdownOpen = !DropdownOpen;
+        Console.WriteLine($"Dropdown toggled: {DropdownOpen}");
+        StateHasChanged();
+    }
+
+    private void CloseDropdown()
+    {
+        DropdownOpen = false;
+        Console.WriteLine("Dropdown closed");
+        StateHasChanged();
+    }
+}
