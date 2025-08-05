@@ -27,7 +27,15 @@ builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.Authentic
         {
             if (!string.IsNullOrEmpty(postLogoutRedirectUri))
             {
-                context.ProtocolMessage.PostLogoutRedirectUri = postLogoutRedirectUri;
+                // Construct the logout URI with the post-logout redirect URI - This will overcome the issue in guest user sign-out with common endpoint
+
+                var logoutUri = $"https://login.microsoftonline.com/common/oauth2/v2.0/logout" +
+                    $"?post_logout_redirect_uri={Uri.EscapeDataString($"https://{context.Request.Host}{postLogoutRedirectUri}")}";
+
+                context.Response.Redirect(logoutUri);
+                context.HandleResponse();
+                return Task.CompletedTask;
+
             }
 
             return Task.CompletedTask;
