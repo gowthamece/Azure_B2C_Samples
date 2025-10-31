@@ -1,0 +1,340 @@
+<TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" TenantId="gowthamcbe.onmicrosoft.com" PolicyId="B2C_1A_TrustFrameworkExtensions_ResetPassword" PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions_ResetPassword" TenantObjectId="cc2ed587-ab5d-454f-a433-035a5aa8a95c">
+  <BasePolicy>
+    <TenantId>gowthamcbe.onmicrosoft.com</TenantId>
+    <PolicyId>B2C_1A_TrustFrameworkBase</PolicyId>
+  </BasePolicy>
+  <BuildingBlocks>
+    <ClaimsSchema>
+      <ClaimType Id="groups">
+        <DisplayName>Comma delimited list of group names</DisplayName>
+        <DataType>stringCollection</DataType>
+        <UserInputType>Readonly</UserInputType>
+      </ClaimType>
+      <ClaimType Id="roles">
+        <DisplayName>Comma delimited list of AppRoleAssignment names</DisplayName>
+        <DataType>stringCollection</DataType>
+        <UserInputType>Readonly</UserInputType>
+      </ClaimType>
+      <ClaimType Id="forceChangePasswordNextLogin">
+	<DisplayName>forceChangePasswordNextLogin</DisplayName>
+	<DataType>boolean</DataType>
+	<AdminHelpText>Directory property, Whether the user password has expired</AdminHelpText>
+</ClaimType>
+<ClaimType Id="continueOnPasswordExpiration">
+	<DisplayName>continueOnPasswordExpiration</DisplayName>
+	<DataType>boolean</DataType>
+	<AdminHelpText>continue ests non-interactive upon password expiration</AdminHelpText>
+</ClaimType>
+<ClaimType Id="samePassword">
+	<DisplayName>samePassword</DisplayName>
+	<DataType>boolean</DataType>
+	<AdminHelpText>Whether user enters the same password</AdminHelpText>
+</ClaimType>
+<ClaimType Id="userMsg">
+	<DisplayName></DisplayName>
+	<DataType>string</DataType>
+	<AdminHelpText>A claim responsible for holding user messages</AdminHelpText>
+	<UserInputType>Paragraph</UserInputType>
+</ClaimType>
+
+    </ClaimsSchema>
+<ClaimsTransformations>
+    <ClaimsTransformation Id="CompareOldAndNewPassword" TransformationMethod="CompareClaims">
+	<InputClaims>
+		<InputClaim ClaimTypeReferenceId="password" TransformationClaimType="inputClaim1" />
+		<InputClaim ClaimTypeReferenceId="newPassword" TransformationClaimType="inputClaim2" />
+	</InputClaims>
+	<InputParameters>
+		<InputParameter Id="operator" DataType="string" Value="EQUAL" />
+	</InputParameters>
+	<OutputClaims>
+		<OutputClaim ClaimTypeReferenceId="samePassword" TransformationClaimType="outputClaim" />
+	</OutputClaims>
+</ClaimsTransformation>
+<!--Assert whether the old and new passwords are same, and return the UserMessageIfClaimsTransformationBooleanValueIsNotEqual error message-->
+<ClaimsTransformation Id="ThrowErrorWhenPassowrdIsSame" TransformationMethod="AssertBooleanClaimIsEqualToValue">
+	<InputClaims>
+		<InputClaim ClaimTypeReferenceId="samePassword" TransformationClaimType="inputClaim" />
+	</InputClaims>
+	<InputParameters>
+		<InputParameter Id="valueToCompareTo" DataType="boolean" Value="false" />
+	</InputParameters>
+</ClaimsTransformation>
+</ClaimsTransformations>
+    <ContentDefinitions>
+      <!-- This content definition is to render an error page that displays unhandled errors. -->
+      <ContentDefinition Id="api.error">
+        <DataUri>urn:com:microsoft:aad:b2c:elements:contract:globalexception:1.2.0</DataUri>
+      </ContentDefinition>
+      <ContentDefinition Id="api.idpselections">
+        <DataUri>urn:com:microsoft:aad:b2c:elements:contract:providerselection:1.2.0</DataUri>
+      </ContentDefinition>
+      <ContentDefinition Id="api.idpselections.signup">
+        <DataUri>urn:com:microsoft:aad:b2c:elements:contract:providerselection:1.2.0</DataUri>
+      </ContentDefinition>
+      <ContentDefinition Id="api.signuporsignin">
+        <DataUri>urn:com:microsoft:aad:b2c:elements:contract:unifiedssp:2.1.0</DataUri>
+      </ContentDefinition>
+      <ContentDefinition Id="api.selfasserted">
+        <DataUri>urn:com:microsoft:aad:b2c:elements:contract:selfasserted:2.1.0</DataUri>
+      </ContentDefinition>
+      <ContentDefinition Id="api.selfasserted.profileupdate">
+        <DataUri>urn:com:microsoft:aad:b2c:elements:contract:selfasserted:2.1.0</DataUri>
+      </ContentDefinition>
+      <ContentDefinition Id="api.localaccountsignup">
+        <DataUri>urn:com:microsoft:aad:b2c:elements:contract:selfasserted:2.1.0</DataUri>
+      </ContentDefinition>
+      <ContentDefinition Id="api.localaccountpasswordreset">
+        <DataUri>urn:com:microsoft:aad:b2c:elements:contract:selfasserted:2.1.0</DataUri>
+      </ContentDefinition>
+    </ContentDefinitions>
+  </BuildingBlocks>
+  <ClaimsProviders>
+    <ClaimsProvider>
+      <DisplayName>Facebook</DisplayName>
+      <TechnicalProfiles>
+        <TechnicalProfile Id="Facebook-OAUTH">
+          <Metadata>
+            <Item Key="client_id">facebook_clientid</Item>
+            <Item Key="scope">email public_profile</Item>
+            <Item Key="ClaimsEndpoint">https://graph.facebook.com/me?fields=id,first_name,last_name,name,email</Item>
+          </Metadata>
+        </TechnicalProfile>
+          <Item Key="ServiceUrl">https://YOUR-FUNCTION-APP.azurewebsites.net/api/ManageB2CAppRoles</Item>
+    </ClaimsProvider>
+    <ClaimsProvider>
+      <DisplayName>Local Account SignIn</DisplayName>
+      <TechnicalProfiles>
+        <TechnicalProfile Id="login-NonInteractive">
+          <Metadata>
+            <Item Key="client_id">acc288dc-da01-4136-87c7-31bdcf71b3e6</Item>
+            <Item Key="IdTokenAudience">37456243-5761-4514-b6af-429614c03359</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="acc288dc-da01-4136-87c7-31bdcf71b3e6" />
+            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="37456243-5761-4514-b6af-429614c03359" />
+            <InputClaim ClaimTypeReferenceId="continueOnPasswordExpiration" DefaultValue="true" />
+          </InputClaims>
+          	<OutputClaims>
+			<!-- Indicates whether user needs to reset the password.
+If the value of this claim is true, other claims aren't return-->
+			<OutputClaim ClaimTypeReferenceId="forceChangePasswordNextLogin" PartnerClaimType="passwordExpired" />
+		</OutputClaims>
+
+        </TechnicalProfile>
+
+        <TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email">
+          <DisplayName>Local Account Signin</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="SignUpTarget">SignUpWithLogonEmailExchange</Item>
+            <Item Key="setting.operatingMode">Email</Item>
+            <Item Key="ContentDefinitionReferenceId">api.localaccountsignin</Item>
+            <Item Key="IncludeClaimResolvingInClaimsHandling">true</Item>
+          </Metadata>
+          <IncludeInSso>false</IncludeInSso>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="signInName" DefaultValue="{OIDC:LoginHint}" AlwaysUseDefaultValue="true" />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="signInName" Required="true" />
+            <OutputClaim ClaimTypeReferenceId="password" Required="true" />
+            <OutputClaim ClaimTypeReferenceId="objectId" />
+            <OutputClaim ClaimTypeReferenceId="authenticationSource" />
+            <OutputClaim ClaimTypeReferenceId="forceChangePasswordNextLogin" />
+          </OutputClaims>
+          <ValidationTechnicalProfiles>
+            <ValidationTechnicalProfile ReferenceId="login-NonInteractive" />
+          </ValidationTechnicalProfiles>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
+        </TechnicalProfile>
+        <TechnicalProfile Id="ThrowErrorWhenPassowrdIsSame">
+				<DisplayName>Assert New Password is different</DisplayName>
+				<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="samePassword" />
+				</OutputClaims>
+				<OutputClaimsTransformations>
+					<OutputClaimsTransformation ReferenceId="CompareOldAndNewPassword" />
+					<OutputClaimsTransformation ReferenceId="ThrowErrorWhenPassowrdIsSame" />
+				</OutputClaimsTransformations>
+</TechnicalProfile>
+<TechnicalProfile Id="SelfAsserted-ForcePasswordReset-ExpiredPassword">
+				<DisplayName>Password Expired</DisplayName>
+				<Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+				<Metadata>
+					<Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
+					<Item Key="UserMessageIfClaimsTransformationBooleanValueIsNotEqual">Please enter a different password</Item>
+				</Metadata>
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="userMsg" DefaultValue="Your password has expired, please change to a new password." />
+				</InputClaims>
+				<DisplayClaims>
+					<DisplayClaim ClaimTypeReferenceId="userMsg" />
+					<DisplayClaim ClaimTypeReferenceId="password" Required="true" />
+					<DisplayClaim ClaimTypeReferenceId="newPassword" Required="true" />
+					<DisplayClaim ClaimTypeReferenceId="reenterPassword" Required="true" />
+				</DisplayClaims>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="objectId" />
+				</OutputClaims>
+				<ValidationTechnicalProfiles>
+					<!-- 1) validate the old password. 2) Assert whether the new password is different than the old one.
+ 3) get the user object ID 4) persist the new password to the directory, and reset the force reset password next logon. -->
+					<ValidationTechnicalProfile ReferenceId="login-NonInteractive" />
+					<ValidationTechnicalProfile ReferenceId="ThrowErrorWhenPassowrdIsSame" />
+					<ValidationTechnicalProfile ReferenceId="AAD-UserReadUsingSignInName" />
+					<ValidationTechnicalProfile ReferenceId="AAD-UserWritePasswordUsingObjectId-ResetNextLogin" />
+				</ValidationTechnicalProfiles>
+				<UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+</TechnicalProfile>
+
+
+<TechnicalProfile Id="AAD-UserReadUsingSignInName">
+				<Metadata>
+					<Item Key="Operation">Read</Item>
+				</Metadata>
+				<InputClaims>
+					<InputClaim ClaimTypeReferenceId="signInName" PartnerClaimType="signInNames.emailAddress" Required="true" />
+				</InputClaims>
+				<OutputClaims>
+					<OutputClaim ClaimTypeReferenceId="objectId" />
+				</OutputClaims>
+				<IncludeTechnicalProfile ReferenceId="AAD-Common" />
+</TechnicalProfile>
+<!--Save the new password to the directory-->
+<TechnicalProfile Id="AAD-UserWritePasswordUsingObjectId-ResetNextLogin">
+				<PersistedClaims>
+					<PersistedClaim ClaimTypeReferenceId="forceChangePasswordNextLogin" PartnerClaimType="passwordProfile.forceChangePasswordNextLogin" DefaultValue="false" AlwaysUseDefaultValue="true" />
+				</PersistedClaims>
+				<IncludeTechnicalProfile ReferenceId="AAD-UserWritePasswordUsingObjectId" />
+</TechnicalProfile>
+
+      </TechnicalProfiles>
+    </ClaimsProvider>
+
+        <!-- /////////////////////// REST APIs ////////////////////////// -->
+    <ClaimsProvider>
+      <DisplayName>REST APIs</DisplayName>
+      <TechnicalProfiles>
+        <TechnicalProfile Id="GetUserAppRoleAssignment">
+          <DisplayName>Retrieves security groups assigned to the user</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <!-- TODO: change this -->
+            <Item Key="ServiceUrl">[your function app endpoint]</Item>
+            <Item Key="AuthenticationType">None</Item>
+            <Item Key="SendClaimsIn">Body</Item>
+            <Item Key="AllowInsecureAuthInProduction">true</Item>
+            <Item Key="IncludeClaimResolvingInClaimsHandling">true</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim Required="true" ClaimTypeReferenceId="objectId" />
+            <!-- this B2C tenant id -->
+            <InputClaim ClaimTypeReferenceId="tenantId" DefaultValue="{Policy:TenantObjectId}" />
+            <!-- The App we're signing in to -->
+            <InputClaim ClaimTypeReferenceId="client_id" PartnerClaimType="clientId" DefaultValue="{OIDC:ClientId}" />
+            <!-- specify that we want both roles and groups back -->
+            <InputClaim ClaimTypeReferenceId="scope" DefaultValue="roles groups" AlwaysUseDefaultValue="true" />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="roles" />
+            <OutputClaim ClaimTypeReferenceId="groups" />
+            <OutputClaim ClaimTypeReferenceId="tenantId" DefaultValue="{Policy:TenantObjectId}" AlwaysUseDefaultValue="true" />
+          </OutputClaims>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+        </TechnicalProfile>
+      </TechnicalProfiles>
+    </ClaimsProvider>
+  </ClaimsProviders>
+  <UserJourneys>
+    <UserJourney Id="SignUpOrSignIn_Test">
+      <OrchestrationSteps>
+        <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+          <ClaimsProviderSelections>
+            <ClaimsProviderSelection TargetClaimsExchangeId="FacebookExchange" />
+            <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
+          </ClaimsProviderSelections>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <!-- Check if the user has selected to sign in using one of the social providers -->
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>objectId</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="FacebookExchange" TechnicalProfileReferenceId="Facebook-OAUTH" />
+            <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <!-- For social IDP authentication, attempt to find the user account in the directory. -->
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>authenticationSource</Value>
+              <Value>localAccountAuthentication</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserReadUsingAlternativeSecurityId" TechnicalProfileReferenceId="AAD-UserReadUsingAlternativeSecurityId-NoError" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <!-- Show self-asserted page only if the directory does not have the user account already (i.e. we do not have an objectId). 
+          This can only happen when authentication happened using a social IDP. If local account was created or authentication done
+          using ESTS in step 2, then an user account must exist in the directory by this time. -->
+        <OrchestrationStep Order="4" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>objectId</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SelfAsserted-Social" TechnicalProfileReferenceId="SelfAsserted-Social" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <!-- This step reads any user attributes that we may not have received when authenticating using ESTS so they can be sent 
+          in the token. -->
+        <OrchestrationStep Order="5" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>authenticationSource</Value>
+              <Value>socialIdpAuthentication</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <!-- The previous step (SelfAsserted-Social) could have been skipped if there were no attributes to collect 
+             from the user. So, in that case, create the user in the directory if one does not already exist 
+             (verified using objectId which would be set from the last step if account was created in the directory. -->
+        <OrchestrationStep Order="6" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>objectId</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserWrite" TechnicalProfileReferenceId="AAD-UserWriteUsingAlternativeSecurityId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <OrchestrationStep Order="7" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="GetUserAppRoleAssignment" TechnicalProfileReferenceId="GetUserAppRoleAssignment" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+        <OrchestrationStep Order="8" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+      </OrchestrationSteps>
+      <ClientDefinition ReferenceId="DefaultWeb" />
+    </UserJourney>
+  </UserJourneys>
+</TrustFrameworkPolicy>

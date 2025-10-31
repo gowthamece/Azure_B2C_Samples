@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "QLR8c+EgH8U=",
+  "dgSpecHash": "MHa/K2AMaSo=",
   "success": true,
-  "projectFilePath": "C:\\Users\\gowth\\source\\repos\\GitHub\\Azure AD B2C\\Web App\\B2CWebApps\\ToDoListAppMVC\\ToDoListAppMVC.csproj",
+  "projectFilePath": "C:\\Users\\gowth\\source\\github\\B2C Custom Policy\\Web App\\B2CWebApps\\ToDoListAppMVC\\ToDoListAppMVC.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\gowth\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\gowth\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
@@ -65,11 +65,13 @@
   ],
   "logs": [
     {
-      "code": "NU1903",
+      "code": "NU1902",
       "level": "Warning",
+      "message": "Package 'Microsoft.Identity.Web' 3.2.2 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-rpq8-q44m-2rpg",
+      "projectPath": "C:\\Users\\gowth\\source\\github\\B2C Custom Policy\\Web App\\B2CWebApps\\ToDoListAppMVC\\ToDoListAppMVC.csproj",
       "warningLevel": 1,
-      "message": "Package 'System.Text.Json' 8.0.4 has a known high severity vulnerability, https://github.com/advisories/GHSA-8g4q-xg66-9fp4",
-      "libraryId": "System.Text.Json",
+      "filePath": "C:\\Users\\gowth\\source\\github\\B2C Custom Policy\\Web App\\B2CWebApps\\ToDoListAppMVC\\ToDoListAppMVC.csproj",
+      "libraryId": "Microsoft.Identity.Web",
       "targetGraphs": [
         "net8.0"
       ]

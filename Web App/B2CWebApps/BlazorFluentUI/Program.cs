@@ -30,7 +30,7 @@ builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.Authentic
                 // Construct the logout URI with the post-logout redirect URI - This will overcome the issue in guest user sign-out with common endpoint
 
                 var logoutUri = $"https://login.microsoftonline.com/common/oauth2/v2.0/logout" +
-                    $"?post_logout_redirect_uri={Uri.EscapeDataString($"https://{context.Request.Host}{postLogoutRedirectUri}")}";
+                    $"?post_logout_redirect_uri={Uri.EscapeDataString($"https://{context.Request.Host}/{postLogoutRedirectUri}")}";
 
                 context.Response.Redirect(logoutUri);
                 context.HandleResponse();
@@ -45,15 +45,15 @@ builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.Authentic
 
 
 // Add Key Vault configuration if in production or staging
-if (builder.Environment.IsProduction() || builder.Environment.IsStaging())
-{
-    Uri kvUri = new(builder.Configuration["AzureEndPoints:keyVaultName"] ?? "https://kv-entraid-dev-eastus-01.vault.azure.net/");
-    var options = new DefaultAzureCredentialOptions
-    {
-        ExcludeEnvironmentCredential = false
-    };
-    builder.Configuration.AddAzureKeyVault(kvUri, new DefaultAzureCredential());
-}
+//if (builder.Environment.IsProduction() || builder.Environment.IsStaging())
+//{
+//    Uri kvUri = new(builder.Configuration["AzureEndPoints:keyVaultName"] ?? "https://kv-entraid-dev-eastus-01.vault.azure.net/");
+//    var options = new DefaultAzureCredentialOptions
+//    {
+//        ExcludeEnvironmentCredential = false
+//    };
+//    builder.Configuration.AddAzureKeyVault(kvUri, new DefaultAzureCredential());
+//}
 
 // Add authorization policies
 builder.Services.AddAuthorization(options =>
@@ -87,7 +87,7 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
+//app.UsePathBase("/AppRoleManagement");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

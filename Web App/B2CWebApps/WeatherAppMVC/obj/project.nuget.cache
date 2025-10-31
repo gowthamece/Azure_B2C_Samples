@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "QQm8kdDZlYI=",
+  "dgSpecHash": "Q/DB/eS0mzg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\gowth\\source\\repos\\GitHub\\Azure AD B2C\\Web App\\B2CWebApps\\WeatherAppMVC\\WeatherAppMVC.csproj",
+  "projectFilePath": "C:\\Users\\gowth\\source\\github\\B2C Custom Policy\\Web App\\B2CWebApps\\WeatherAppMVC\\WeatherAppMVC.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\gowth\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\gowth\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
@@ -62,5 +62,18 @@
     "C:\\Users\\gowth\\.nuget\\packages\\system.text.json\\8.0.5\\system.text.json.8.0.5.nupkg.sha512",
     "C:\\Users\\gowth\\.nuget\\packages\\system.threading.tasks.extensions\\4.5.4\\system.threading.tasks.extensions.4.5.4.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1902",
+      "level": "Warning",
+      "message": "Package 'Microsoft.Identity.Web' 3.5.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-rpq8-q44m-2rpg",
+      "projectPath": "C:\\Users\\gowth\\source\\github\\B2C Custom Policy\\Web App\\B2CWebApps\\WeatherAppMVC\\WeatherAppMVC.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\gowth\\source\\github\\B2C Custom Policy\\Web App\\B2CWebApps\\WeatherAppMVC\\WeatherAppMVC.csproj",
+      "libraryId": "Microsoft.Identity.Web",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    }
+  ]
 }
