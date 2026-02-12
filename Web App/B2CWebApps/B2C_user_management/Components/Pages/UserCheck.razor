@@ -1,0 +1,306 @@
+@page "/user-check"
+@using B2C_user_management.Models
+@using B2C_user_management.Services
+@inject IExcelService ExcelService
+@inject IGraphUserService GraphService
+@inject IJSRuntime JSRuntime
+@inject ILogger<UserCheck> Logger
+@rendermode InteractiveServer
+
+<PageTitle>B2C User Check</PageTitle>
+
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="bi bi-people-fill me-2"></i>
+        Azure AD B2C User Existence Check
+    </h1>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-upload me-2"></i>
+                Upload Excel File
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <h6><i class="bi bi-info-circle me-2"></i>Instructions:</h6>
+                <ul class="mb-0">
+                    <li>Upload an Excel file (.xlsx or .xls) containing user email addresses</li>
+                    <li>The file must have a column named <strong>Email</strong> or <strong>EmailAddress</strong></li>
+                    <li>Optional columns: <strong>DisplayName</strong>, <strong>FirstName</strong>, <strong>LastName</strong></li>
+                    <li>The first row should contain column headers</li>
+                </ul>
+            </div>
+
+            <div class="mb-3">
+                <label for="excelFile" class="form-label">Select Excel File</label>
+                <InputFile id="excelFile" class="form-control" OnChange="HandleFileSelected" accept=".xlsx,.xls" disabled="@_isProcessing" />
+            </div>
+
+            @if (_selectedFileName != null)
+            {
+                <div class="alert alert-secondary">
+                    <i class="bi bi-file-earmark-excel me-2"></i>
+                    Selected file: <strong>@_selectedFileName</strong>
+                </div>
+            }
+
+            <button class="btn btn-primary" @onclick="ProcessFile" disabled="@(_selectedFile == null || _isProcessing)">
+                @if (_isProcessing)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Processing...</span>
+                }
+                else
+                {
+                    <i class="bi bi-check2-circle me-2"></i>
+                    <span>Check Users in B2C</span>
+                }
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            @_errorMessage
+            <button type="button" class="btn-close" @onclick="() => _errorMessage = null"></button>
+        </div>
+    }
+
+    @if (_isProcessing)
+    {
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>@_progressMessage</h5>
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                         style="width: @(_progressPercentage)%;" aria-valuenow="@_progressPercentage" aria-valuemin="0" aria-valuemax="100">
+                        @_progressPercentage%
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (_results != null && _results.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-table me-2"></i>
+                    Results (@_results.Count users)
+                </h5>
+                <div>
+                    <button class="btn btn-light btn-sm me-2" @onclick="DownloadExcelReport">
+                        <i class="bi bi-file-earmark-excel me-1"></i>
+                        Download Excel
+                    </button>
+                    <button class="btn btn-light btn-sm" @onclick="DownloadCsvReport">
+                        <i class="bi bi-filetype-csv me-1"></i>
+                        Download CSV
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-primary">@_results.Count</h3>
+                                <p class="mb-0">Total Users</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success bg-opacity-25">
+                            <div class="card-body text-center">
+                                <h3 class="text-success">@_results.Count(r => r.IsExist == "Y")</h3>
+                                <p class="mb-0">Users Found (Y)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-danger bg-opacity-25">
+                            <div class="card-body text-center">
+                                <h3 class="text-danger">@_results.Count(r => r.IsExist == "N")</h3>
+                                <p class="mb-0">Not Found (N)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Email</th>
+                                <th>Display Name</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>IsExist</th>
+                                <th>B2C Object ID</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int index = 1; }
+                            @foreach (var result in _results)
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>@result.Email</td>
+                                    <td>@result.DisplayName</td>
+                                    <td>@result.FirstName</td>
+                                    <td>@result.LastName</td>
+                                    <td>
+                                        @if (result.IsExist == "Y")
+                                        {
+                                            <span class="badge bg-success">Y</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">N</span>
+                                        }
+                                    </td>
+                                    <td><small class="text-muted">@result.B2CObjectId</small></td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(result.ErrorMessage))
+                                        {
+                                            <span class="text-danger" title="@result.ErrorMessage">
+                                                <i class="bi bi-exclamation-circle"></i>
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                                index++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private IBrowserFile? _selectedFile;
+    private string? _selectedFileName;
+    private bool _isProcessing;
+    private string? _errorMessage;
+    private string _progressMessage = "";
+    private int _progressPercentage;
+    private List<UserCheckResult>? _results;
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        _selectedFile = e.File;
+        _selectedFileName = e.File.Name;
+        _errorMessage = null;
+        _results = null;
+    }
+
+    private async Task ProcessFile()
+    {
+        if (_selectedFile == null)
+            return;
+
+        _isProcessing = true;
+        _errorMessage = null;
+        _results = null;
+        _progressPercentage = 0;
+
+        try
+        {
+            // Step 1: Read Excel file
+            _progressMessage = "Reading Excel file...";
+            _progressPercentage = 10;
+            StateHasChanged();
+
+            await using var stream = _selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB max
+            var users = await ExcelService.ReadUsersFromExcelAsync(stream);
+
+            if (!users.Any())
+            {
+                _errorMessage = "No users found in the Excel file. Please ensure the file has an Email column with data.";
+                return;
+            }
+
+            _progressMessage = $"Found {users.Count} users. Checking existence in Azure AD B2C...";
+            _progressPercentage = 30;
+            StateHasChanged();
+
+            // Step 2: Check users in B2C
+            _results = await GraphService.CheckUsersExistAsync(users);
+
+            _progressMessage = "Generating results...";
+            _progressPercentage = 100;
+            StateHasChanged();
+
+            Logger.LogInformation("Processed {Count} users. Found: {Found}, Not Found: {NotFound}",
+                _results.Count,
+                _results.Count(r => r.IsExist == "Y"),
+                _results.Count(r => r.IsExist == "N"));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error processing file");
+            _errorMessage = $"Error processing file: {ex.Message}";
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DownloadExcelReport()
+    {
+        if (_results == null || !_results.Any())
+            return;
+
+        try
+        {
+            var bytes = ExcelService.GenerateExcelReport(_results);
+            var fileName = $"B2C_UserCheck_Report_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            await DownloadFile(bytes, fileName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error generating Excel report");
+            _errorMessage = $"Error generating Excel report: {ex.Message}";
+        }
+    }
+
+    private async Task DownloadCsvReport()
+    {
+        if (_results == null || !_results.Any())
+            return;
+
+        try
+        {
+            var bytes = ExcelService.GenerateCsvReport(_results);
+            var fileName = $"B2C_UserCheck_Report_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            await DownloadFile(bytes, fileName, "text/csv");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error generating CSV report");
+            _errorMessage = $"Error generating CSV report: {ex.Message}";
+        }
+    }
+
+    private async Task DownloadFile(byte[] bytes, string fileName, string contentType)
+    {
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("downloadFile", fileName, contentType, base64);
+    }
+}

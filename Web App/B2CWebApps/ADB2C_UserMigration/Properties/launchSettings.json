@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ADB2C_UserMigration": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7060",
+      "launchBrowser": false
+    }
+  }
+}
