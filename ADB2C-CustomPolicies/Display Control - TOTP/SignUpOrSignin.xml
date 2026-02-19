@@ -5,16 +5,16 @@
   xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06"
   PolicySchemaVersion="0.3.0.0"
   TenantId="gowthamcbe.onmicrosoft.com"
-  PolicyId="B2C_1A_signup_signin"
-  PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_signup_signin">
+  PolicyId="B2C_1A_DisplayControlSignupSignin"
+  PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_DisplayControlSignupSignin">
 
   <BasePolicy>
     <TenantId>gowthamcbe.onmicrosoft.com</TenantId>
-    <PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
+    <PolicyId>B2C_1A_DisplayControlTrustFrameworkExtensions</PolicyId>
   </BasePolicy>
 
   <RelyingParty>
-    <DefaultUserJourney ReferenceId="SignUpOrSignIn" />
+    <DefaultUserJourney ReferenceId="SignUpOrSignIn-Custom" />
     <Endpoints>
       <!--points to refresh token journey when app makes refresh token request-->
       <Endpoint Id="Token" UserJourneyReferenceId="RedeemRefreshToken" />

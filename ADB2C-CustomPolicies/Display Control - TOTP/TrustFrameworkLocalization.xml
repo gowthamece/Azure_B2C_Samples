@@ -5,12 +5,12 @@
   xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" 
   PolicySchemaVersion="0.3.0.0" 
   TenantId="gowthamcbe.onmicrosoft.com" 
-  PolicyId="B2C_1A_TrustFrameworkLocalization" 
-  PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_TrustFrameworkLocalization">
+  PolicyId="B2C_1A_DisplayControlTrustFrameworkLocalization" 
+  PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_DisplayControlTrustFrameworkLocalization">
 
   <BasePolicy>
     <TenantId>gowthamcbe.onmicrosoft.com</TenantId>
-    <PolicyId>B2C_1A_TrustFrameworkBase</PolicyId>
+    <PolicyId>B2C_1A_DisplayControlTrustFrameworkBase</PolicyId>
   </BasePolicy>
 
   <BuildingBlocks>
