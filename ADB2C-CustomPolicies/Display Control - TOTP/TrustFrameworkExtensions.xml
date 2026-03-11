@@ -59,7 +59,16 @@
 				</OutputClaims>
 			</ClaimsTransformation>
 		</ClaimsTransformations>
-
+       <ContentDefinitions>
+			<ContentDefinition Id="api.localaccountpasswordreset">
+				<LoadUri>https://safuncappmcgentdev01.blob.core.windows.net/adb2clayout/B2C_ForgotPassword.html</LoadUri>
+				<RecoveryUri>~/common/default_page_error.html</RecoveryUri>
+				<DataUri>urn:com:microsoft:aad:b2c:elements:contract:selfasserted:2.1.26</DataUri>
+				<Metadata>
+					<Item Key="DisplayName">Forgot Password</Item>
+				</Metadata>
+			</ContentDefinition>
+			</ContentDefinitions>
 		
 		<DisplayControls>
 			<DisplayControl Id="emailVerificationControl" UserInterfaceControlType="VerificationControl">
