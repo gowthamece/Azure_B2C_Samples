@@ -1,27 +1,19 @@
-﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<TrustFrameworkPolicy
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06"
-  PolicySchemaVersion="0.3.0.0"
-  TenantId="gowthamcbe.onmicrosoft.com"
-  PolicyId="B2C_1A_DisplayControlSignupSignin"
-  PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_DisplayControlSignupSignin">
-
+﻿<TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" TenantId="gowthamcbe.onmicrosoft.com" PolicyId="B2C_1A_DisplayControlSignupSignin" PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_DisplayControlSignupSignin" TenantObjectId="cc2ed587-ab5d-454f-a433-035a5aa8a95c">
   <BasePolicy>
     <TenantId>gowthamcbe.onmicrosoft.com</TenantId>
     <PolicyId>B2C_1A_DisplayControlTrustFrameworkExtensions</PolicyId>
   </BasePolicy>
-
   <RelyingParty>
     <DefaultUserJourney ReferenceId="SignUpOrSignIn-Custom" />
     <Endpoints>
       <!--points to refresh token journey when app makes refresh token request-->
       <Endpoint Id="Token" UserJourneyReferenceId="RedeemRefreshToken" />
     </Endpoints>
-	  <UserJourneyBehaviors>
-		  <SingleSignOn Scope="TrustFramework" EnforceIdTokenHintOnLogout="true"/>
-	  </UserJourneyBehaviors>
+    <UserJourneyBehaviors>
+      <SingleSignOn Scope="TrustFramework" EnforceIdTokenHintOnLogout="true" />
+      <SessionExpiryType>Absolute</SessionExpiryType>
+      <SessionExpiryInSeconds>3600</SessionExpiryInSeconds>
+    </UserJourneyBehaviors>
     <TechnicalProfile Id="PolicyProfile">
       <DisplayName>PolicyProfile</DisplayName>
       <Protocol Name="OpenIdConnect" />
@@ -30,7 +22,8 @@
         <OutputClaim ClaimTypeReferenceId="givenName" />
         <OutputClaim ClaimTypeReferenceId="surname" />
         <OutputClaim ClaimTypeReferenceId="email" />
-        <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub"/>
+        <OutputClaim ClaimTypeReferenceId="authenticationTime" />
+        <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
         <!-- <OutputClaim ClaimTypeReferenceId="identityProvider" /> -->
         <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true" DefaultValue="{Policy:TenantObjectId}" />
       </OutputClaims>

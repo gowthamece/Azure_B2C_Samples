@@ -30,7 +30,7 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     configureCookieAuthenticationOptions: options =>
         {
             options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None;
-            options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;            
+            options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
             //options.Cookie.Name = "WeatherApp";
         },
         OpenIdConnectDefaults.AuthenticationScheme,
