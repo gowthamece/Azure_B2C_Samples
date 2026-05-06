@@ -1,0 +1,56 @@
+﻿@page "/"
+
+<PageTitle>B2C User Management - Home</PageTitle>
+
+<div class="container mt-4">
+    <div class="jumbotron bg-light p-5 rounded">
+        <h1 class="display-4">
+            <i class="bi bi-shield-check me-3"></i>
+            Azure AD B2C User Management
+        </h1>
+        <p class="lead">
+            Verify the existence of users in your Azure AD B2C directory by uploading an Excel file containing user email addresses.
+        </p>
+        <hr class="my-4">
+        <p>This application allows you to:</p>
+        <ul>
+            <li>Upload an Excel file with user email addresses</li>
+            <li>Batch check user existence in Azure AD B2C using Microsoft Graph API</li>
+            <li>Download a report (Excel or CSV) with user existence status</li>
+        </ul>
+        <a class="btn btn-primary btn-lg" href="user-check" role="button">
+            <i class="bi bi-arrow-right-circle me-2"></i>
+            Get Started
+        </a>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-excel display-4 text-success"></i>
+                    <h5 class="card-title mt-3">Upload Excel</h5>
+                    <p class="card-text">Upload an Excel file (.xlsx) containing user email addresses. The file should have an "Email" column.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-cloud-check display-4 text-primary"></i>
+                    <h5 class="card-title mt-3">Batch Verification</h5>
+                    <p class="card-text">Users are verified against Azure AD B2C using efficient batch calls to Microsoft Graph API.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-download display-4 text-info"></i>
+                    <h5 class="card-title mt-3">Download Report</h5>
+                    <p class="card-text">Download the results as Excel or CSV with an "IsExist" column showing Y (exists) or N (not found).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

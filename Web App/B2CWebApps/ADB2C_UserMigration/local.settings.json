@@ -1,0 +1,15 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+        "AzureB2C_TenantId": "<your-tenant-id>",
+        "AzureB2C_ClientId": "<your-client-id>",
+        "AzureB2C_ClientSecret": "<your-client-secret>",
+        "AzureB2C_TenantName": "<your-tenant-name>"
+    },
+    "Host": {
+        "CORS": "*",
+        "CORSCredentials": false
+    }
+}

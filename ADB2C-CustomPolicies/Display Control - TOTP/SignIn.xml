@@ -1,0 +1,44 @@
+<TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" TenantId="gowthamcbe.onmicrosoft.com" PolicyId="B2C_1A_DisplayControlSignin" DeploymentMode="Development" UserJourneyRecorderEndpoint="urn:journeyrecorder:applicationinsights" PublicPolicyUri="http://gowthamcbe.onmicrosoft.com/B2C_1A_DisplayControlSignin" TenantObjectId="cc2ed587-ab5d-454f-a433-035a5aa8a95c">
+  <BasePolicy>
+    <TenantId>gowthamcbe.onmicrosoft.com</TenantId>
+    <PolicyId>B2C_1A_DisplayControlTrustFrameworkExtensions</PolicyId>
+  </BasePolicy>
+  <RelyingParty>
+    <DefaultUserJourney ReferenceId="Custom-SignIn" />
+    <Endpoints>
+      <!--points to refresh token journey when app makes refresh token request-->
+      <Endpoint Id="Token" UserJourneyReferenceId="RedeemRefreshToken" />
+    </Endpoints>
+    <UserJourneyBehaviors>
+      <SingleSignOn Scope="Tenant" EnforceIdTokenHintOnLogout="false" />
+      <SessionExpiryType>Absolute</SessionExpiryType>
+      <SessionExpiryInSeconds>3600</SessionExpiryInSeconds>
+      <JourneyInsights TelemetryEngine="ApplicationInsights" InstrumentationKey="473e374a-73ed-4cb9-bc9b-07b2921b0194" DeveloperMode="true" ClientEnabled="false" ServerEnabled="true" TelemetryVersion="1.0.0" />
+    </UserJourneyBehaviors>
+    <TechnicalProfile Id="PolicyProfile">
+      <DisplayName>PolicyProfile</DisplayName>
+      <Protocol Name="OpenIdConnect" />
+      <InputClaims>
+        <InputClaim ClaimTypeReferenceId="passwordPolicies" DefaultValue="DisablePasswordExpiration, DisableStrongPassword" />
+      </InputClaims>
+      <OutputClaims>
+        <OutputClaim ClaimTypeReferenceId="displayName" />
+        <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
+        <OutputClaim ClaimTypeReferenceId="givenName" />
+        <OutputClaim ClaimTypeReferenceId="surname" />
+        <OutputClaim ClaimTypeReferenceId="email" />
+        <OutputClaim ClaimTypeReferenceId="authenticationTime" />
+        <!-- <OutputClaim ClaimTypeReferenceId="groups" DefaultValue="" />
+				<OutputClaim ClaimTypeReferenceId="roles" DefaultValue="" /> -->
+        <OutputClaim ClaimTypeReferenceId="forceChangePasswordNextLogin" PartnerClaimType="passwordExpired" DefaultValue="false" />
+        <OutputClaim ClaimTypeReferenceId="signInNames.emailAddress" PartnerClaimType="email" />
+        <!--<OutputClaim ClaimTypeReferenceId="signInNames.emailAddress" />-->
+        <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
+        <OutputClaim ClaimTypeReferenceId="identityProvider" />
+        <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true" DefaultValue="{Policy:TenantObjectId}" />
+        <!-- <OutputClaim ClaimTypeReferenceId="trustFrameworkPolicy" Required="true" DefaultValue="{policy}" PartnerClaimType="tfp" /> -->
+      </OutputClaims>
+      <SubjectNamingInfo ClaimType="sub" />
+    </TechnicalProfile>
+  </RelyingParty>
+</TrustFrameworkPolicy>

@@ -1,6 +1,198 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+﻿@using System.IdentityModel.Tokens.Jwt
+@using Microsoft.AspNetCore.Authentication
+@{
+    ViewData["Title"] = "User Claims";
+    var claims = User.Claims.OrderBy(claim => claim.Type).ToList();
+
+    (JwtSecurityToken? token, string? raw, string? error) DecodeJwt(string? jwt)
+    {
+        if (string.IsNullOrWhiteSpace(jwt)) return (null, null, "Token not available");
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            if (!handler.CanReadToken(jwt)) return (null, jwt, "Unreadable token format");
+            return (handler.ReadJwtToken(jwt), jwt, null);
+        }
+        catch (Exception ex)
+        {
+            return (null, jwt, ex.Message);
+        }
+    }
+
+    string FormatUtc(DateTime dt) => dt == default ? "-" : dt.ToString("yyyy-MM-dd HH:mm:ss 'UTC'");
+    string FormatRemaining(DateTime expiresUtc)
+    {
+        if (expiresUtc == default) return "-";
+        var remaining = expiresUtc - DateTime.UtcNow;
+        if (remaining <= TimeSpan.Zero) return "expired";
+        return $"{(int)remaining.TotalHours}h {remaining.Minutes}m {remaining.Seconds}s";
+    }
+
+    var idTokenRaw = await Context.GetTokenAsync("id_token");
+    var accessTokenRaw = await Context.GetTokenAsync("access_token");
+    var refreshTokenRaw = await Context.GetTokenAsync("refresh_token");
+    var expiresAtRaw = await Context.GetTokenAsync("expires_at");
+
+    var idTokenDecoded = DecodeJwt(idTokenRaw);
+    var accessTokenDecoded = DecodeJwt(accessTokenRaw);
+
+    var authResult = await Context.AuthenticateAsync();
+    var ticketIssuedUtc = authResult?.Properties?.IssuedUtc?.UtcDateTime ?? default;
+    var ticketExpiresUtc = authResult?.Properties?.ExpiresUtc?.UtcDateTime ?? default;
+
+    DateTime expiresAtUtc = default;
+    if (!string.IsNullOrEmpty(expiresAtRaw) &&
+        DateTimeOffset.TryParse(expiresAtRaw, out var dto))
+    {
+        expiresAtUtc = dto.UtcDateTime;
+    }
 }
 <h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<p class="text-muted">Authenticated claims and token lifetimes for the current signed-in user.</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Authenticated</dt>
+            <dd class="col-sm-9">@User.Identity?.IsAuthenticated</dd>
+
+            <dt class="col-sm-3">Authentication Type</dt>
+            <dd class="col-sm-9">@(User.Identity?.AuthenticationType ?? "Not available")</dd>
+
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@(User.Identity?.Name ?? "Not available")</dd>
+
+            <dt class="col-sm-3">Claim Count</dt>
+            <dd class="col-sm-9">@claims.Count</dd>
+
+            <dt class="col-sm-3">Current Server Time (UTC)</dt>
+            <dd class="col-sm-9">@FormatUtc(DateTime.UtcNow)</dd>
+        </dl>
+    </div>
+</div>
+
+<h3>Session &amp; Token Lifetimes</h3>
+<div class="table-responsive mb-4">
+    <table class="table table-striped table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Artifact</th>
+                <th>Issued (UTC)</th>
+                <th>Expires (UTC)</th>
+                <th>Time Remaining</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Auth Cookie</strong> (local session)</td>
+                <td>@FormatUtc(ticketIssuedUtc)</td>
+                <td>@FormatUtc(ticketExpiresUtc)</td>
+                <td>@FormatRemaining(ticketExpiresUtc)</td>
+                <td>Driven by <code>CookieAuthenticationOptions.ExpireTimeSpan</code>. If blank, cookie is session-only.</td>
+            </tr>
+            @if (idTokenDecoded.token is not null)
+            {
+                <tr>
+                    <td><strong>ID Token</strong> (JWT)</td>
+                    <td>@FormatUtc(idTokenDecoded.token.ValidFrom)</td>
+                    <td>@FormatUtc(idTokenDecoded.token.ValidTo)</td>
+                    <td>@FormatRemaining(idTokenDecoded.token.ValidTo)</td>
+                    <td>iss: <code>@idTokenDecoded.token.Issuer</code></td>
+                </tr>
+            }
+            else
+            {
+                <tr>
+                    <td><strong>ID Token</strong></td>
+                    <td colspan="4" class="text-muted">@(idTokenDecoded.error ?? "Not available")</td>
+                </tr>
+            }
+            @if (accessTokenDecoded.token is not null)
+            {
+                <tr>
+                    <td><strong>Access Token</strong> (JWT)</td>
+                    <td>@FormatUtc(accessTokenDecoded.token.ValidFrom)</td>
+                    <td>@FormatUtc(accessTokenDecoded.token.ValidTo)</td>
+                    <td>@FormatRemaining(accessTokenDecoded.token.ValidTo)</td>
+                    <td>iss: <code>@accessTokenDecoded.token.Issuer</code></td>
+                </tr>
+            }
+            else
+            {
+                <tr>
+                    <td><strong>Access Token</strong></td>
+                    <td colspan="4" class="text-muted">@(accessTokenDecoded.error ?? "Not available (no API scope requested)")</td>
+                </tr>
+            }
+            <tr>
+                <td><strong>expires_at</strong> (OIDC property)</td>
+                <td>-</td>
+                <td>@FormatUtc(expiresAtUtc)</td>
+                <td>@FormatRemaining(expiresAtUtc)</td>
+                <td>Stored by OIDC middleware when <code>SaveTokens = true</code>.</td>
+            </tr>
+            <tr>
+                <td><strong>Refresh Token</strong></td>
+                <td colspan="3" class="text-muted">
+                    @(string.IsNullOrEmpty(refreshTokenRaw) ? "Not available (requires offline_access scope)." : "Present (opaque - expiry not embedded).")
+                </td>
+                <td>Expiry set in B2C policy <code>refresh_token_lifetime_secs</code> (min 86400s).</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@if (idTokenDecoded.token is not null)
+{
+    <details class="mb-4">
+        <summary><strong>ID Token - decoded header &amp; payload</strong></summary>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <h6>Header</h6>
+                <pre class="bg-light p-2 border rounded small">@System.Text.Json.JsonSerializer.Serialize(idTokenDecoded.token.Header, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+            </div>
+            <div class="col-md-6">
+                <h6>Payload</h6>
+                <pre class="bg-light p-2 border rounded small">@System.Text.Json.JsonSerializer.Serialize(idTokenDecoded.token.Payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+            </div>
+        </div>
+    </details>
+}
+
+<h3>User Claims</h3>
+@if (claims.Count == 0)
+{
+    <div class="alert alert-warning" role="alert">
+        No claims were found for the current user.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Value</th>
+                    <th scope="col">Value Type</th>
+                    <th scope="col">Issuer</th>
+                    <th scope="col">Original Issuer</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var claim in claims)
+            {
+                <tr>
+                    <td class="text-break">@claim.Type</td>
+                    <td class="text-break">@claim.Value</td>
+                    <td class="text-break">@claim.ValueType</td>
+                    <td class="text-break">@claim.Issuer</td>
+                    <td class="text-break">@claim.OriginalIssuer</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
